@@ -6876,7 +6876,7 @@ function renderVaultGrid(papers) {
 }
 
 function fetchVaultPapers() {
-  fetch('/api/papers')
+  fetch('http://localhost:8080/api/papers')
     .then(r => r.json())
     .then(data => renderVaultGrid(data.papers))
     .catch(e => console.error('Vault fetch error:', e));
@@ -6886,7 +6886,7 @@ function uploadVaultPaper(file) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const dataUrl = e.target.result;
-    fetch('/api/upload', {
+    fetch('http://localhost:8080/api/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ filename: file.name, data: dataUrl })
@@ -6899,7 +6899,7 @@ function uploadVaultPaper(file) {
 
 window.deleteVaultPaper = function(filename) {
   if(!confirm('Delete this paper?')) return;
-  fetch('/api/delete', {
+  fetch('http://localhost:8080/api/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ filename })
@@ -6938,7 +6938,7 @@ async function fetchObsidianTasks() {
   if(!container) return;
   container.innerHTML = '<span class="muted">syncing with obsidian...</span>';
   try {
-    const res = await fetch('/api/obsidian/tasks');
+    const res = await fetch('http://localhost:8080/api/obsidian/tasks');
     const data = await res.json();
     if(data.tasks && data.tasks.length > 0) {
       container.innerHTML = data.tasks.map(t => {
@@ -6959,7 +6959,7 @@ async function fetchObsidianTasks() {
 
 async function toggleObsidianTask(file, lineIdx, done) {
   try {
-    await fetch('/api/obsidian/update_task', {
+    await fetch('http://localhost:8080/api/obsidian/update_task', {
       method: 'POST',
       body: JSON.stringify({ file, line_idx: lineIdx, done })
     });
@@ -7011,35 +7011,150 @@ function bModal(title, body) {
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let whiteNoiseNode = null;
 
+async function groqTask(sys, prompt, onChunk, onDone) {
+  const p = P();
+  if(!p.apiKey) {
+    if(onChunk) onChunk('<span style="color:var(--warn)">[ERR] Groq API Key is missing. Add it in settings.</span>');
+    if(onDone) onDone();
+    return;
+  }
+  
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + p.apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: p.model || 'llama3-8b-8192',
+        messages: [
+          { role: 'system', content: sys },
+          { role: 'user', content: prompt }
+        ],
+        stream: true,
+        temperature: 0.5,
+        max_tokens: 2048
+      })
+    });
+
+    if(!res.ok){
+      const errText = await res.text();
+      if(onChunk) onChunk(`\n[API ERR] ${res.status}: ${errText.slice(0, 120)}`);
+      if(onDone) onDone();
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    
+    while(true){
+      const { done, value } = await reader.read();
+      if(done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for(const line of lines){
+        const trimmed = line.trim();
+        if(!trimmed || !trimmed.startsWith('data:')) continue;
+        const data = trimmed.slice(5).trim();
+        if(data === '[DONE]') break;
+        try {
+          const j = JSON.parse(data);
+          const delta = j.choices?.[0]?.delta?.content || '';
+          if(delta && onChunk){
+            onChunk(delta);
+          }
+        } catch(e){ /* skip */ }
+      }
+    }
+  } catch(err) {
+    if(onChunk) onChunk(`\n[NETWORK ERR] ${err.message}`);
+  }
+  if(onDone) onDone();
+}
+
+function streamModal(title, sysPrompt, userPrompt) {
+  const ex = document.getElementById('b-modal');
+  if(ex) ex.remove();
+  const ov = document.createElement('div');
+  ov.id = 'b-modal';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+  ov.innerHTML = `
+    <div style="background:var(--bg);border:2px solid var(--accent);color:var(--ink);width:90%;max-width:600px;padding:24px;font-family:var(--term);box-shadow: 12px 12px 0px rgba(0,0,0,0.5);position:relative; max-height:80vh; display:flex; flex-direction:column;">
+      <h3 style="margin-top:0;margin-bottom:16px;color:var(--accent);text-transform:uppercase;flex-shrink:0;">// ${escapeHTML(title)}</h3>
+      <div id="sm-out" style="font-size:12px;line-height:1.6;margin-bottom:24px;white-space:pre-wrap;flex-grow:1;overflow-y:auto;background:#050505;padding:12px;border:1px solid var(--dim);"></div>
+      <div style="text-align:right;flex-shrink:0;">
+        <button class="btn hot" onclick="document.getElementById('b-modal').remove()">[ close ]</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(ov);
+  
+  const out = document.getElementById('sm-out');
+  const log = (msg) => {
+    out.innerHTML += escapeHTML(msg).replace(/\\n/g, '<br>');
+    out.scrollTop = out.scrollHeight;
+  };
+  
+  out.innerHTML = '<span style="color:var(--cy)">[SYSTEM] Initializing process...</span><br><br>';
+  let acc = '';
+  groqTask(sysPrompt, userPrompt, (delta) => {
+    acc += delta;
+    out.innerHTML = mdRender(acc);
+    out.scrollTop = out.scrollHeight;
+  }, () => {
+    out.innerHTML += '<br><br><span style="color:var(--ok)">[ PROCESS TERMINATED ]</span>';
+    out.scrollTop = out.scrollHeight;
+  });
+}
+
 function appAction(action) {
   const p = P();
   if(action === 'rev_schedule') {
-    bModal('Revision Schedule', 'Generated a 4-week interleaved revision block based on your weak topics: Stoichiometry, Trigonometry, and Cell Biology. Schedule synced to profile.');
+    streamModal('Revision Schedule', 'You are an elite academic planner.', 'Generate a 4-week interleaved revision block based on this study log: ' + JSON.stringify(p.studyLog));
   } else if(action === 'notion_push') {
-    bModal('Notion Push', 'Siege Database linked. 24 tasks pushed to your Notion workspace.\n\nSync Status: SUCCESS');
+    bModal('Notion Push', 'To push to Notion, configure your Notion API key in settings. (Integration coming soon, please use CSV export for now.)');
   } else if(action === 'card_share') {
-    bModal('Progress Card', 'Generated PNG card.\n\nStreak: ' + (p.streak.count||0) + ' days\nTopics Mastered: ' + (p.studyLog.length||0) + '\n\n(Exported to your clipboard)');
+    bModal('Progress Card', 'Generated PNG card.\\n\\nStreak: ' + (p.streak.count||0) + ' days\\nTopics Mastered: ' + (p.studyLog.length||0) + '\\n\\n(Exported to your clipboard)');
   } else if(action === 'burnout') {
-    bModal('Burnout Predictor', 'Risk Level: LOW.\n\nYour streak is steady but you maintain a healthy 20% break ratio. Energy reserves are sufficient for next 14 days of grinding.');
+    streamModal('Burnout Predictor', 'You are an academic performance psychologist.', 'Analyze this study log and predict my burnout risk. Provide recovery advice. Log: ' + JSON.stringify(p.studyLog));
   } else if(action === 'eod_report') {
     const todayLogs = p.studyLog.filter(l => l.date === todayIso());
     const totalMins = todayLogs.reduce((acc, l) => acc + l.mins, 0);
-    bModal('End of Day Report', `You logged ${fmtMins(totalMins)} today.\n\nMission Completion: 100%\nSystem state saved. Goodnight, operator.`);
+    streamModal('End of Day Report', 'You are a drill sergeant.', `I studied for ${totalMins} minutes today. Here is what I did: ${JSON.stringify(todayLogs)}. Give me an end-of-day debrief.`);
   } else if(action === 'topic_deps') {
-    bModal('Dependency Map', '[States of Matter] → [Atomic Structure] → [Stoichiometry]\n\nYou cannot master Stoichiometry without fixing your 40% score in Atomic Structure first. Recalibrating mission...');
+    streamModal('Dependency Map', 'You are a curriculum expert.', 'Based on my recent failed topics, what foundational concepts am I missing? Log: ' + JSON.stringify(p.studyLog.slice(-5)));
   } else if(action === 'extract_flash') {
-    bModal('AI Flashcard Extraction', 'Scanned recent Notes.\nFound 14 definitions. Generated 14 flashcards.\n\nThey have been added to the Review Queue.');
+    const noteText = (p.notes && activeNoteId && p.notes[activeNoteId]) ? p.notes[activeNoteId].text : 'No active note found.';
+    streamModal('AI Flashcard Extraction', 'Extract 5 high-yield Anki-style flashcards from this text. Format as Q: ... A: ...', noteText);
   } else if(action === 'confidence_decay') {
-    bModal('Confidence Decay Alert', 'WARNING:\n- Coordination & Response: Last studied 21 days ago (Decay: 78%)\n- Electrolysis: Last studied 14 days ago (Decay: 50%)\n\nAdding to tomorrow\'s spaced repetition mission.');
+    bModal('Confidence Decay Alert', 'WARNING:\\n- Coordination & Response: Last studied 21 days ago (Decay: 78%)\\n- Electrolysis: Last studied 14 days ago (Decay: 50%)\\n\\nAdding to tomorrow\\'s spaced repetition mission.');
   } else if(action === 'blind_mode') {
     document.body.classList.toggle('blind-mode');
     toast('Blind Mode toggled. Paper years hidden.');
   } else if(action === 'curve_est') {
-    bModal('Grade Curve Estimator', 'Subject: Chemistry (0620)\nPaper: 42\nEstimated A* Boundary: 68/80 (85%)\n\nBased on global difficulty metrics from the 2023 session.');
+    streamModal('Grade Curve Estimator', 'You are an examiner.', 'Estimate the A* boundary for standard IGCSE papers this year and give specific advice on how to secure it.');
   } else if(action === 'timer_overlay') {
-    bModal('Timer Overlay', 'Injected a 75-minute countdown overlay onto the active PDF viewer.');
+    const ex = document.getElementById('floating-timer');
+    if(ex) { ex.remove(); return; }
+    const timer = document.createElement('div');
+    timer.id = 'floating-timer';
+    timer.style.cssText = 'position:fixed;top:20px;right:20px;background:#050505;border:2px solid var(--warn);color:var(--warn);padding:12px 24px;font-family:var(--term);font-size:24px;font-weight:bold;z-index:99999;box-shadow:4px 4px 0px rgba(0,0,0,0.5);cursor:move;';
+    let timeLeft = 4500; // 75 mins
+    timer.innerHTML = `TIME: 75:00 <button onclick="this.parentElement.remove()" style="background:transparent;border:none;color:var(--warn);margin-left:12px;cursor:pointer;">[X]</button>`;
+    document.body.appendChild(timer);
+    const intv = setInterval(() => {
+      if(!document.getElementById('floating-timer')) { clearInterval(intv); return; }
+      timeLeft--;
+      if(timeLeft <= 0) { timer.innerHTML = 'TIME UP!'; timer.style.color='var(--hot)'; clearInterval(intv); return; }
+      const m = Math.floor(timeLeft/60).toString().padStart(2,'0');
+      const s = (timeLeft%60).toString().padStart(2,'0');
+      timer.innerHTML = `TIME: ${m}:${s} <button onclick="this.parentElement.remove()" style="background:transparent;border:none;color:inherit;margin-left:12px;cursor:pointer;">[X]</button>`;
+    }, 1000);
   } else if(action === 'ms_highlighter') {
-    bModal('MS Highlighter', 'Mark Scheme Analysis Active.\nKeywords and strict command word dependencies are now highlighted in neon green on the PDF.');
+    streamModal('MS Highlighter', 'You are a grading AI.', 'What are the most common strict command words (e.g. "describe", "explain") and their precise grading requirements in Cambridge exams?');
   } else if(action === 'white_noise') {
     if(whiteNoiseNode) { whiteNoiseNode.stop(); whiteNoiseNode = null; toast('White Noise: OFF'); return; }
     const bufferSize = audioCtx.sampleRate * 2;
@@ -7057,51 +7172,73 @@ function appAction(action) {
     if(btn) { btn.style.display = btn.style.display === 'none' ? 'inline-block' : 'none'; }
     toast('Strict Mode toggled. Pausing disabled.');
   } else if(action === 'web_blocker') {
-    bModal('Website Blocker', 'Intercepting network requests...\n\nBlocked domains:\n- instagram.com\n- tiktok.com\n- youtube.com/shorts\n\nProxy active on port 8080.');
+    bModal('Website Blocker', 'To block websites, you need to use the Siege Chrome Extension. (Install from the repo).');
   } else if(action === 'heatmap') {
-    bModal('Session Heatmap', 'Peak focus achieved between 14:00 and 14:25.\nDistraction frequency: 1 attempt(s) blocked.\nFlow state: 85% efficiency.');
+    streamModal('Session Heatmap', 'You are an efficiency analyzer.', 'Analyze this focus data and tell me when I was most efficient. Data: ' + JSON.stringify(p.studyLog));
   } else if(action === 'csv_export') {
-    fetch('/api/backend/export-csv', {
+    fetch('http://localhost:8080/api/backend/export-csv', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({csv_data: "Date,Subject,Minutes\n" + p.studyLog.map(l => `${l.date},${l.subj},${l.mins}`).join("\n"), filename: "study_data.csv"})
+      body: JSON.stringify({csv_data: "Date,Subject,Minutes\\n" + p.studyLog.map(l => `${l.date},${l.subj},${l.mins}`).join("\\n"), filename: "study_data.csv"})
     }).then(r => r.json()).then(d => {
-      bModal('Data Export', 'CSV Data compiled and exported.\nDownload URL generated: <a href="'+d.url+'" target="_blank" style="color:var(--cy)">Download CSV</a>');
+      bModal('Data Export', 'CSV Data compiled and exported.\\nDownload URL generated: <a href="'+d.url+'" target="_blank" style="color:var(--cy)">Download CSV</a>');
     });
   } else if(action === 'similar_q') {
-    bModal('AI Similar Questions', 'Generating 3 CAIE-style questions based on your mistake in "Electrolysis of Brine"...\n\nCheck the AI tab for the generated questions.');
+    const lastErr = p.studyLog.length > 0 ? p.studyLog[p.studyLog.length-1].subj : 'Electrolysis';
+    streamModal('AI Similar Questions', 'You are a CAIE examiner.', `Generate 3 hard questions based on: ${lastErr}`);
   } else if(action === 'mistake_heat') {
-    bModal('Mistake Heatmap', 'Highest error density:\n1. Organic Nomenclature (8 errors)\n2. Vector Geometry (5 errors)\n3. Stoichiometry (4 errors)');
+    streamModal('Mistake Heatmap', 'You are an AI diagnostic tool.', `Analyze my errors: ${JSON.stringify(p.studyLog)}. Point out my highest error density.`);
   } else if(action === 'redemption') {
-    bModal('Redemption Mode', 'System loaded your top 5 most frequently failed questions into a custom PDF booklet.\n\nTimer set to 45 mins. Begin.');
+    bModal('Redemption Mode', 'System loaded your top 5 most frequently failed questions into a custom PDF booklet.\\n\\nTimer set to 45 mins. Begin.');
   } else if(action === 'auto_summ') {
-    bModal('Auto-Summarize', 'Scanning 1,200 words of notes...\n\nSummary: Electrolysis is the breakdown of an ionic compound using electricity. Anode is positive, Cathode is negative. OILRIG applies.');
+    const noteText = (p.notes && activeNoteId && p.notes[activeNoteId]) ? p.notes[activeNoteId].text : 'No active note.';
+    streamModal('Auto-Summarize', 'Summarize this dense academic text into 3 bullet points.', noteText);
   } else if(action === 'mind_map') {
-    bModal('Mind Map Generation', 'Mermaid.js diagram built.\n[Electrolysis] --> (Anode)\n[Electrolysis] --> (Cathode)\n\nGraph exported to vault.');
+    const noteText = (p.notes && activeNoteId && p.notes[activeNoteId]) ? p.notes[activeNoteId].text : 'No active note.';
+    streamModal('Mind Map Generation', 'Generate a Mermaid.js flowchart mapping out these concepts. Output ONLY the raw mermaid block.', noteText);
   } else if(action === 'cloze_test') {
-    bModal('Cloze Deletion Test', 'Notes processed.\n"Electrolysis is the breakdown of an ____ compound using ____."\n\nTest ready in the active editor.');
+    const noteText = (p.notes && activeNoteId && p.notes[activeNoteId]) ? p.notes[activeNoteId].text : 'No active note.';
+    streamModal('Cloze Deletion Test', 'Create a 5-question fill-in-the-blanks test from this text.', noteText);
   } else if(action === 'ai_audit') {
-    bModal('AI Content Audit', 'Cross-referencing with 0620 Syllabus...\n\nWARNING: You are missing "cryolite" and "bauxite" in your aluminium extraction notes. You will lose 2 marks on a 6-marker.');
+    const noteText = (p.notes && activeNoteId && p.notes[activeNoteId]) ? p.notes[activeNoteId].text : 'No active note.';
+    streamModal('AI Content Audit', 'Cross-reference this text with standard IGCSE/A-Level syllabi and point out missing concepts.', noteText);
   } else if(action === 'rev_cards') {
     toast('Flashcard Deck Reversed. You are now being tested on Answers -> Questions.');
   } else if(action === 'bulk_csv') {
     bModal('Bulk Import CSV', 'Please drop your Quizlet export CSV into the Vault Dropzone. System will parse and convert to Siege Flashcards.');
   } else if(action === 'leech_hunter') {
-    bModal('Leech Hunter', 'Identified 4 Leech Cards (Fail rate > 80%).\n\nThey have been temporarily suspended from the SRS queue. Rewrite them or break them into smaller atomic facts.');
+    let count = 0;
+    p.flashcards.forEach(c => {
+      if(c.lapses >= 3 && !c.suspended) { c.suspended = true; count++; }
+    });
+    if(count > 0) save();
+    bModal('Leech Hunter', `Identified and suspended ${count} Leech Cards (Lapses >= 3).\\n\\nRewrite them or break them into smaller atomic facts.`);
   } else if(action === 'auto_gen_notes') {
-    bModal('Auto-Gen from Notes', 'Extracted 12 key/value pairs from current markdown notes.\n\nFlashcards added to deck.');
+    const noteText = (p.notes && activeNoteId && p.notes[activeNoteId]) ? p.notes[activeNoteId].text : 'No active note.';
+    streamModal('Auto-Gen from Notes', 'Extract exact key-value pairs from this text that can be used as direct Anki imports. Format: Question | Answer.', noteText);
   } else if(action === 'cram_mode') {
-    toast('CRAM MODE: SRS disabled. All 142 cards loaded into queue. Godspeed.');
+    toast(`CRAM MODE: SRS disabled. All ${p.flashcards.length} cards loaded into queue. Godspeed.`);
   } else if(action === 'export_json') {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(P()));
     const el = document.createElement('a'); el.setAttribute("href", dataStr); el.setAttribute("download", "siege_profile.json");
     document.body.appendChild(el); el.click(); el.remove();
     toast('Profile JSON Exported');
   } else if(action === 'import_json') {
-    bModal('Import JSON', 'Run localStorage.setItem("siege_profile", <your_json>) in the console to import manually. UI coming in v1.1.');
+    const fileIn = document.createElement('input');
+    fileIn.type = 'file'; fileIn.accept = '.json';
+    fileIn.onchange = e => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try { const data = JSON.parse(ev.target.result); localStorage.setItem('siege_profile', JSON.stringify(data)); window.location.reload(); }
+        catch(err) { alert('Invalid JSON'); }
+      };
+      reader.readAsText(file);
+    };
+    fileIn.click();
   } else if(action === 'theme_custom') {
-    bModal('Theme Customizer', 'Current: Brutalist Dark\n\nTo change, use the variables in the settings panel. Siege does not do "light mode".');
-  
+    bModal('Theme Customizer', 'Current: Brutalist Dark\\n\\nTo change, use the variables in the settings panel. Siege does not do "light mode".');
   } else if(action === 'start_mock') {
     const sel = document.getElementById('mock-paper-select');
     if(!sel || !sel.value) { bModal('Error', 'No paper selected.'); return; }
@@ -7115,15 +7252,14 @@ function appAction(action) {
     document.body.classList.add('blind-mode');
     document.body.classList.add('focus-mode');
     
-    bModal('SIMULATION STARTED', `Paper: ${file}\nDuration: ${mins} minutes.\n\nRules:\n1. No pausing.\n2. Full screen locked.\n3. Mark schemes hidden.\n\nGood luck.`);
+    bModal('SIMULATION STARTED', `Paper: ${file}\\nDuration: ${mins} minutes.\\n\\nRules:\\n1. No pausing.\\n2. Full screen locked.\\n3. Mark schemes hidden.\\n\\nGood luck.`);
     
-    // Auto navigate to papers tab and load the file
     go('papers');
     loadPaper(file);
-    appAction('timer_overlay'); // Trigger the overlay
+    appAction('timer_overlay');
   } else if(action === 'api_health') {
-    fetch('/api/backend/status').then(r=>r.json()).then(d => {
-      bModal('API Health Check', `Backend Status: ${d.status.toUpperCase()}\nVersion: ${d.version}\nGroq Key: ${P().apiKey ? 'Configured' : 'MISSING'}`);
+    fetch('http://localhost:8080/api/backend/status').then(r=>r.json()).then(d => {
+      bModal('API Health Check', `Backend Status: ${d.status.toUpperCase()}\\nVersion: ${d.version}\\nGroq Key: ${P().apiKey ? 'Configured' : 'MISSING'}`);
     }).catch(e => bModal('API Error', 'Backend server is unreachable. Ensure server.py is running on port 8080.'));
   }
 }
@@ -7174,7 +7310,7 @@ function handleDropFiles(files) {
     const reader = new FileReader();
     reader.onload = function(e) {
       const b64 = e.target.result;
-      fetch('/api/upload', {
+      fetch('http://localhost:8080/api/upload', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ filename: file.name, data: b64 })
@@ -7182,7 +7318,7 @@ function handleDropFiles(files) {
         if(d.status === 'ok') {
           logDrop(`[SUCCESS] ${file.name} sorted to vault.`);
           // Reload papers list
-          fetch('/api/papers').then(res=>res.json()).then(dat => {
+          fetch('http://localhost:8080/api/papers').then(res=>res.json()).then(dat => {
             window.allPapers = dat.papers;
             renderPapersList();
             
