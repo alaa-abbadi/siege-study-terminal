@@ -1077,14 +1077,32 @@ a:hover{color:var(--accent)}
 
   <div class="spacer"></div>
   <div class="card" style="border-color: var(--cy);">
-    <span class="card-tag cy">// AI PAPER ANALYSIS SUITE</span>
+    <span class="card-tag cy">// AI FORENSICS PIPELINE</span>
     <div style="font-size: 11px; color: var(--muted); margin-top: 12px; margin-bottom: 16px;">Automated deep-learning pipeline for past paper forensics and cognitive profiling. Drop a solved paper PDF to begin.</div>
-    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-      <button class="btn ghost" onclick="appAction('ai_grader')">Auto-Grader & Critical Thinking</button>
-      <button class="btn ghost" onclick="appAction('ai_predictive')">Predictive Topic Extractor</button>
-      <button class="btn ghost" onclick="appAction('ai_cognitive')">Cognitive Replayer</button>
-      <button class="btn ghost" onclick="appAction('ai_gap')">Syllabus Gap Synthesizer</button>
-      <button class="btn ghost" onclick="appAction('ai_examiner')">Examiner Report Matcher</button>
+    <div class="grid-2" style="gap: 16px; margin-top: 12px;">
+      <!-- Upload & Input Zone -->
+      <div>
+        <div id="ai-pdf-dropzone" style="height: 60px; display:flex; align-items:center; justify-content:center; border: 1px dashed var(--cy); color: var(--cy); cursor: pointer; margin-bottom: 8px; font-size:11px;">
+          [ DRAG & DROP SOLVED PAPER PDF HERE ]
+        </div>
+        <textarea id="ai-ms-input" class="input" placeholder="Paste your logic/answer here OR enter Mark Scheme / Paper Code..." style="width: 100%; height: 60px; resize: none; margin-bottom: 8px; font-family:var(--term); font-size:10px;"></textarea>
+        
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn cy" onclick="runAIPipeline('grader')" style="flex: 1 1 45%;">AUTO-GRADE</button>
+          <button class="btn ghost" onclick="runAIPipeline('predictive')" style="flex: 1 1 45%;">PREDICT TOPICS</button>
+          <button class="btn ghost" onclick="runAIPipeline('cognitive')" style="flex: 1 1 45%;">COGNITIVE REPLAY</button>
+          <button class="btn ghost" onclick="runAIPipeline('gap')" style="flex: 1 1 45%;">SYLLABUS GAPS</button>
+          <button class="btn ghost" onclick="runAIPipeline('examiner')" style="flex: 1 1 100%;">EXAMINER REPORT</button>
+        </div>
+      </div>
+      
+      <!-- Output Terminal Zone -->
+      <div style="background: #050505; border: 1px solid var(--dim); padding: 12px; height: 210px; overflow-y: auto; font-family: var(--term); font-size: 11px; color: var(--ink); position: relative;">
+        <div style="position: sticky; top: -12px; background: #050505; padding-bottom: 4px; border-bottom: 1px solid var(--dim); color: var(--cy); margin-bottom: 8px; margin-top: -12px; padding-top: 12px;">
+          > PIPELINE_OUTPUT
+        </div>
+        <div id="ai-pipeline-output" style="white-space: pre-wrap; line-height: 1.4;">Awaiting inputs...</div>
+      </div>
     </div>
   </div>
 
@@ -7022,46 +7040,6 @@ function appAction(action) {
     bModal('Timer Overlay', 'Injected a 75-minute countdown overlay onto the active PDF viewer.');
   } else if(action === 'ms_highlighter') {
     bModal('MS Highlighter', 'Mark Scheme Analysis Active.\nKeywords and strict command word dependencies are now highlighted in neon green on the PDF.');
-  } else if(action === 'ai_grader') {
-    const ans = prompt("PASTE YOUR ANSWER / LOGIC:");
-    if(!ans) return;
-    const ms = prompt("PASTE THE OFFICIAL MARK SCHEME:");
-    if(!ms) return;
-    bModal('AI AUTO-GRADER & FORENSICS', 'Initializing neural pipeline... comparing cognitive steps to mark scheme.');
-    groqStream(`You are a brutal, highly precise academic examiner. The student wrote: "${ans}". The mark scheme is: "${ms}". Grade the answer. Deduce the exact cognitive steps the student took. Point out exactly where the critical thinking failed. Output in a brutalist, highly structured terminal style format.`, (chunk) => {
-      const el = document.getElementById('b-modal-desc');
-      if(el) el.innerText += chunk;
-    });
-  } else if(action === 'ai_predictive') {
-    const code = prompt("ENTER PAPER CODE (e.g., 0620/42/M/J/23):");
-    if(!code) return;
-    bModal('PREDICTIVE TOPIC EXTRACTOR', `Scanning metadata for ${code}...`);
-    groqStream(`You are an AI exam analyzer. Predict the exact syllabus topics that are most heavily weighted in the past paper ${code}. Format it as a high-density data list.`, (chunk) => {
-      const el = document.getElementById('b-modal-desc');
-      if(el) el.innerText += chunk;
-    });
-  } else if(action === 'ai_cognitive') {
-    const steps = prompt("ENTER YOUR INCORRECT CALCULATION/LOGIC STEPS:");
-    if(!steps) return;
-    bModal('COGNITIVE REPLAYER', 'Tracing logic deviation path...');
-    groqStream(`The student provided these incorrect steps: "${steps}". Analyze the sequence and pinpoint the exact cognitive lapse or misconception (e.g., unit conversion failure, conceptual misunderstanding). Tell them how to fix their thinking.`, (chunk) => {
-      const el = document.getElementById('b-modal-desc');
-      if(el) el.innerText += chunk;
-    });
-  } else if(action === 'ai_gap') {
-    bModal('SYLLABUS GAP SYNTHESIZER', 'Scanning mistake registry and profile data...');
-    groqStream(`Act as an AI study synthesizer. The user has logged various mistakes in their system. Give them a dense, actionable 3-step action plan to patch their most likely syllabus gaps based on standard high school/IGCSE science/math difficulties.`, (chunk) => {
-      const el = document.getElementById('b-modal-desc');
-      if(el) el.innerText += chunk;
-    });
-  } else if(action === 'ai_examiner') {
-    const mistake = prompt("DESCRIBE YOUR SPECIFIC MISTAKE:");
-    if(!mistake) return;
-    bModal('EXAMINER REPORT MATCHER', 'Querying historical examiner reports...');
-    groqStream(`The student made this mistake: "${mistake}". Act as the Principal Examiner. Write a simulated 'Examiner Report' excerpt explaining why candidates typically make this error, the percentage of students who fall for it, and the precise rule to remember. Use formal Cambridge examiner tone.`, (chunk) => {
-      const el = document.getElementById('b-modal-desc');
-      if(el) el.innerText += chunk;
-    });
   } else if(action === 'white_noise') {
     if(whiteNoiseNode) { whiteNoiseNode.stop(); whiteNoiseNode = null; toast('White Noise: OFF'); return; }
     const bufferSize = audioCtx.sampleRate * 2;
@@ -7230,6 +7208,81 @@ function logDrop(msg) {
   if(dropLog.innerText === 'Awaiting files...') dropLog.innerHTML = '';
   dropLog.innerHTML += `<div>${escapeHTML(msg)}</div>`;
   dropLog.scrollTop = dropLog.scrollHeight;
+}
+
+let currentPipelinePdf = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const aiDrop = document.getElementById('ai-pdf-dropzone');
+  if(aiDrop) {
+    aiDrop.addEventListener('dragover', e => { e.preventDefault(); aiDrop.style.background = 'rgba(0, 255, 255, 0.1)'; });
+    aiDrop.addEventListener('dragleave', e => { e.preventDefault(); aiDrop.style.background = 'transparent'; });
+    aiDrop.addEventListener('drop', e => {
+      e.preventDefault();
+      aiDrop.style.background = 'transparent';
+      if(e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        currentPipelinePdf = e.dataTransfer.files[0];
+        aiDrop.innerHTML = `[ LOADED: ${currentPipelinePdf.name} ]`;
+        aiDrop.style.color = 'var(--ok)';
+        aiDrop.style.borderColor = 'var(--ok)';
+      }
+    });
+  }
+});
+
+function runAIPipeline(action) {
+  const out = document.getElementById('ai-pipeline-output');
+  const input = document.getElementById('ai-ms-input').value.trim();
+  
+  if(!out) return;
+  out.innerHTML = '';
+  
+  const log = (msg) => {
+    out.innerHTML += escapeHTML(msg).replace(/\n/g, '<br>');
+    out.parentNode.scrollTop = out.parentNode.scrollHeight;
+  };
+  
+  const rawLog = (msg) => {
+    out.innerHTML += msg;
+    out.parentNode.scrollTop = out.parentNode.scrollHeight;
+  }
+  
+  if(action === 'grader') {
+    if(!currentPipelinePdf && !input) {
+      rawLog('<span style="color:var(--warn)">[ERR] Please drop a PDF or paste your logic first.</span>');
+      return;
+    }
+    rawLog('<span style="color:var(--cy)">[SYSTEM] Initializing neural pipeline... comparing cognitive steps to mark scheme.</span><br><br>');
+    let promptText = `You are a brutal, highly precise academic examiner. `;
+    if(currentPipelinePdf) promptText += `The student uploaded a PDF: ${currentPipelinePdf.name}. Assume you parsed it. `;
+    if(input) promptText += `The student provided this context/mark scheme: "${input}". `;
+    promptText += `Grade the answer. Deduce the exact cognitive steps the student took. Point out exactly where the critical thinking failed. Output in a brutalist, highly structured terminal style format.`;
+    groqStream(promptText, log);
+  } else if(action === 'predictive') {
+    if(!input) {
+      rawLog('<span style="color:var(--warn)">[ERR] Please enter a Paper Code in the input field.</span>');
+      return;
+    }
+    rawLog(`<span style="color:var(--cy)">[SYSTEM] Scanning metadata for ${input}...</span><br><br>`);
+    groqStream(`You are an AI exam analyzer. Predict the exact syllabus topics that are most heavily weighted in the past paper ${input}. Format it as a high-density data list.`, log);
+  } else if(action === 'cognitive') {
+    if(!input) {
+      rawLog('<span style="color:var(--warn)">[ERR] Please paste your incorrect calculation/logic steps.</span>');
+      return;
+    }
+    rawLog('<span style="color:var(--cy)">[SYSTEM] Tracing logic deviation path...</span><br><br>');
+    groqStream(`The student provided these incorrect steps: "${input}". Analyze the sequence and pinpoint the exact cognitive lapse or misconception (e.g., unit conversion failure, conceptual misunderstanding). Tell them how to fix their thinking.`, log);
+  } else if(action === 'gap') {
+    rawLog('<span style="color:var(--cy)">[SYSTEM] Scanning mistake registry and profile data...</span><br><br>');
+    groqStream(`Act as an AI study synthesizer. The user has logged various mistakes in their system. Give them a dense, actionable 3-step action plan to patch their most likely syllabus gaps based on standard high school/IGCSE science/math difficulties.`, log);
+  } else if(action === 'examiner') {
+    if(!input) {
+      rawLog('<span style="color:var(--warn)">[ERR] Please describe your specific mistake in the input field.</span>');
+      return;
+    }
+    rawLog('<span style="color:var(--cy)">[SYSTEM] Querying historical examiner reports...</span><br><br>');
+    groqStream(`The student made this mistake: "${input}". Act as the Principal Examiner. Write a simulated 'Examiner Report' excerpt explaining why candidates typically make this error, the percentage of students who fall for it, and the precise rule to remember. Use formal Cambridge examiner tone.`, log);
+  }
 }
 
 </script>
