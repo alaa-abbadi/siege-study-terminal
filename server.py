@@ -58,6 +58,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                     })
             self.wfile.write(json.dumps({"tasks": tasks}).encode())
             return
+        elif self.path.startswith("/api/backend/status"):
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "online", "version": "1.0.0", "storage_path": DIRECTORY}).encode())
+            return
         return super().do_GET()
 
     def do_POST(self):
@@ -130,6 +136,42 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         with open(filepath, 'w', encoding='utf-8') as md_file:
                             md_file.writelines(lines)
             
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok"}).encode())
+            return
+
+        elif self.path == "/api/backend/export-csv":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            csv_data = data.get('csv_data', '')
+            filename = data.get('filename', 'export.csv')
+            filepath = os.path.join(DIRECTORY, filename)
+            
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(csv_data)
+                
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok", "url": f"/{filename}"}).encode())
+            return
+            
+        elif self.path == "/api/backend/save-note":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            topic = data.get('topic', 'note').replace('/', '_')
+            content = data.get('content', '')
+            filepath = os.path.join(VAULT_DIR, f"{topic}.md")
+            
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(content)
+                
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
