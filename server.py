@@ -184,6 +184,34 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"status": "ok"}).encode())
             return
+            
+        elif self.path == "/api/backend/rag-search":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            query = data.get('query', '').lower()
+            context = ""
+            
+            if os.path.exists(VAULT_DIR):
+                for f in os.listdir(VAULT_DIR):
+                    if f.endswith('.md'):
+                        filepath = os.path.join(VAULT_DIR, f)
+                        try:
+                            with open(filepath, 'r', encoding='utf-8') as md_file:
+                                content = md_file.read()
+                                # Simple search logic: check if query words exist in the document
+                                words = [w for w in query.split() if len(w) > 3]
+                                if query in content.lower() or (words and any(word in content.lower() for word in words)):
+                                    context += f"\\n--- FROM VAULT: {f} ---\\n" + content[:2000]
+                        except Exception:
+                            pass
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok", "context": context}).encode())
+            return
 
         self.send_response(404)
         self.end_headers()

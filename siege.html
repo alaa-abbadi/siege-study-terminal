@@ -912,6 +912,7 @@ a:hover{color:var(--accent)}
       <button class="btn ghost" onclick="window.print()">print weekly plan</button>
       <!-- NEW FEATURES -->
       <button class="btn hot" id="btn-focus-mode" onclick="document.body.classList.toggle('focus-mode'); toast('Focus mode engaged: Sidebar hidden.')">[ focus mode ]</button>
+      <button class="btn bad" id="btn-crisis-mode" onclick="appAction('crisis_mode')" style="color:var(--bg); background:var(--bad); font-weight:bold;">[ INITIATE CRISIS MODE ]</button>
       <button class="btn ghost" onclick="appAction('burnout')">burnout predictor</button>
       <button class="btn ghost" onclick="appAction('eod_report')">end of day report</button>
     </div>
@@ -964,12 +965,18 @@ a:hover{color:var(--accent)}
 
   <div class="grid-2">
     <div class="card">
-      <span class="card-tag cy">// weak areas (this week)</span>
-      <div id="dash-weak" style="margin-top:10px"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="card-tag cy">// SYLLABUS VULNERABILITY MATRIX</span>
+        <button class="btn xs hot" onclick="appAction('vuln_scan')">[ INITIATE SCAN ]</button>
+      </div>
+      <div id="dash-weak" style="margin-top:10px; font-size:11px; white-space:pre-wrap; color:var(--muted); max-height:150px; overflow-y:auto; font-family:var(--term);">Awaiting scan protocol...</div>
     </div>
     <div class="card">
-      <span class="card-tag warn">// up next (srs)</span>
-      <div id="dash-srs" style="margin-top:10px"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="card-tag warn">// COGNITIVE DECAY TRACKER</span>
+        <button class="btn xs ghost" onclick="appAction('decay_scan')">run analysis</button>
+      </div>
+      <div id="dash-srs" style="margin-top:10px; font-size:11px; white-space:pre-wrap; color:var(--muted); max-height:150px; overflow-y:auto; font-family:var(--term);">No cognitive decay telemetry available.</div>
     </div>
   </div>
 </section>
@@ -1242,6 +1249,7 @@ a:hover{color:var(--accent)}
       <button class="chat-btn-icon" id="chat-attach" title="attach image or pdf">&#128206;</button>
       <button class="chat-btn-icon" id="chat-mic" title="voice input">&#9673;</button>
       <button class="chat-btn-icon" id="chat-yt" title="youtube transcript">&#9654;</button>
+      <button class="chat-btn-icon" id="chat-rag" title="toggle vault knowledge graph (RAG)" style="color:var(--muted)">⚲</button>
       <button class="chat-send" id="chat-send">SEND</button>
     </div>
   </div>
@@ -4306,8 +4314,25 @@ async function sendChat(){
 
   // build message content
   let userContent = text;
+  
+  if(window.ragEnabled) {
+    try {
+      const resp = await fetch('http://localhost:8080/api/backend/rag-search', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query: text})
+      });
+      const data = await resp.json();
+      if(data.context) {
+        userContent = `[RETRIEVED KNOWLEDGE GRAPH CONTEXT]\n${data.context}\n[END CONTEXT]\n\n${userContent}`;
+      }
+    } catch(e) {
+      console.error('RAG Error:', e);
+    }
+  }
+
   if(ytTranscript){
-    userContent = `[YOUTUBE TRANSCRIPT CONTEXT]\n${ytTranscript.slice(0,6000)}\n[END TRANSCRIPT]\n\n${text}`;
+    userContent = `[YOUTUBE TRANSCRIPT CONTEXT]\n${ytTranscript.slice(0,6000)}\n[END TRANSCRIPT]\n\n${userContent}`;
     ytTranscript = '';
     $('#yt-zone').innerHTML = '';
   }
@@ -4352,6 +4377,13 @@ function clearPendingFile(){
   const preview = $('#chat-log').querySelector('.chat-img-preview');
   if(preview) preview.remove();
 }
+
+window.ragEnabled = false;
+$('#chat-rag').onclick = () => {
+  window.ragEnabled = !window.ragEnabled;
+  $('#chat-rag').style.color = window.ragEnabled ? 'var(--accent)' : 'var(--muted)';
+  toast(window.ragEnabled ? 'Vault Knowledge Graph LINKED.' : 'Vault Knowledge Graph UNLINKED.');
+};
 
 function parseMissionUpdate(text){
   // full replace (legacy + new)
@@ -7128,6 +7160,32 @@ function appAction(action) {
     streamModal('AI Flashcard Extraction', 'Extract 5 high-yield Anki-style flashcards from this text. Format as Q: ... A: ...', noteText);
   } else if(action === 'confidence_decay') {
     bModal('Confidence Decay Alert', 'WARNING:\\n- Coordination & Response: Last studied 21 days ago (Decay: 78%)\\n- Electrolysis: Last studied 14 days ago (Decay: 50%)\\n\\nAdding to tomorrow\\'s spaced repetition mission.');
+  } else if(action === 'vuln_scan') {
+    const out = document.getElementById('dash-weak');
+    if(!out) return;
+    out.innerHTML = '<span style="color:var(--cy)">[SYSTEM] Compiling log forensics...</span><br><br>';
+    const sys = 'You are a Cambridge examiner analytics engine. Analyze this study log and identify the top 3 syllabus vulnerability areas (specific subtopics the student is failing). Output a brutalist ASCII heatmap table (e.g. [████] High Risk: Moles). Output ONLY the table, no intro.';
+    groqTask(sys, JSON.stringify(p.studyLog), (chunk) => {
+      out.innerHTML += escapeHTML(chunk).replace(/\\n/g, '<br>');
+      out.scrollTop = out.scrollHeight;
+    }, () => {
+      out.innerHTML += '<br><br><span style="color:var(--bad)">[ CRITICAL VULNERABILITIES IDENTIFIED ]</span>';
+    });
+  } else if(action === 'decay_scan') {
+    const out = document.getElementById('dash-srs');
+    if(!out) return;
+    out.innerHTML = '<span style="color:var(--cy)">[SYSTEM] Calculating Ebbinghaus decay curves...</span><br><br>';
+    const sys = 'You are a cognitive telemetry AI. Analyze this study log dates and subjects. Calculate the estimated memory retention percentage for each subject using the Ebbinghaus forgetting curve. Output a brutalist list: e.g. "PHYSICS: 42% [DECAY WARNING]". Output ONLY the list.';
+    groqTask(sys, JSON.stringify(p.studyLog), (chunk) => {
+      out.innerHTML += escapeHTML(chunk).replace(/\\n/g, '<br>');
+      out.scrollTop = out.scrollHeight;
+    }, () => {
+      out.innerHTML += '<br><br><span style="color:var(--warn)">[ DECAY TELEMETRY UPDATED ]</span>';
+    });
+  } else if(action === 'crisis_mode') {
+    document.body.style.filter = "sepia(100%) hue-rotate(300deg) saturate(300%)";
+    toast('CRISIS MODE PROTOCOL INITIATED. ALL EXPLORATORY UI DISABLED. HIGH-YIELD ONLY.');
+    streamModal('CRISIS MODE PROTOCOL', 'You are a brutal, unforgiving triage AI.', 'My exam is in 48 hours. Here is my study log: ' + JSON.stringify(p.studyLog) + '. Strip away all fluff. Give me the absolute highest-yield top 3 things I MUST memorize right now or I will fail. Use military triage language.');
   } else if(action === 'blind_mode') {
     document.body.classList.toggle('blind-mode');
     toast('Blind Mode toggled. Paper years hidden.');
