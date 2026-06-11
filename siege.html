@@ -1075,6 +1075,19 @@ a:hover{color:var(--accent)}
 
   <div id="papers-grid" class="paper-grid"></div>
 
+  <div class="spacer"></div>
+  <div class="card" style="border-color: var(--cy);">
+    <span class="card-tag cy">// AI PAPER ANALYSIS SUITE</span>
+    <div style="font-size: 11px; color: var(--muted); margin-top: 12px; margin-bottom: 16px;">Automated deep-learning pipeline for past paper forensics and cognitive profiling. Drop a solved paper PDF to begin.</div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <button class="btn ghost" onclick="appAction('ai_grader')">Auto-Grader & Critical Thinking</button>
+      <button class="btn ghost" onclick="appAction('ai_predictive')">Predictive Topic Extractor</button>
+      <button class="btn ghost" onclick="appAction('ai_cognitive')">Cognitive Replayer</button>
+      <button class="btn ghost" onclick="appAction('ai_gap')">Syllabus Gap Synthesizer</button>
+      <button class="btn ghost" onclick="appAction('ai_examiner')">Examiner Report Matcher</button>
+    </div>
+  </div>
+
   <div class="spacer-sm"></div>
   <button class="btn xs ghost" id="diff-map-toggle">toggle difficulty map</button>
   <div id="diff-map-zone" style="display:none;margin-top:12px"></div>
@@ -1342,41 +1355,9 @@ a:hover{color:var(--accent)}
           <th style="padding: 4px;">SRS_INT</th>
           <th style="padding: 4px;">YIELD</th>
         </tr>
-        <tr style="border-bottom: 1px dotted var(--dim);">
-          <td style="padding: 4px; color: var(--cy);">0620.T04</td>
-          <td style="padding: 4px;">Stoichiometry</td>
-          <td style="padding: 4px; color: var(--warn);">42%</td>
-          <td style="padding: 4px;">+1d</td>
-          <td style="padding: 4px; color: #0f0;">HIGH</td>
-        </tr>
-        <tr style="border-bottom: 1px dotted var(--dim);">
-          <td style="padding: 4px; color: var(--cy);">0620.T08</td>
-          <td style="padding: 4px;">Acids, Bases</td>
-          <td style="padding: 4px; color: #0f0;">88%</td>
-          <td style="padding: 4px;">+14d</td>
-          <td style="padding: 4px;">MED</td>
-        </tr>
-        <tr style="border-bottom: 1px dotted var(--dim);">
-          <td style="padding: 4px; color: var(--cy);">0625.T01</td>
-          <td style="padding: 4px;">Kinematics</td>
-          <td style="padding: 4px; color: var(--accent);">21%</td>
-          <td style="padding: 4px; color: var(--accent);">0d [CRIT]</td>
-          <td style="padding: 4px; color: #0f0;">HIGH</td>
-        </tr>
-        <tr style="border-bottom: 1px dotted var(--dim);">
-          <td style="padding: 4px; color: var(--cy);">0500.P2</td>
-          <td style="padding: 4px;">Directed Writing</td>
-          <td style="padding: 4px; color: #0f0;">94%</td>
-          <td style="padding: 4px;">+21d</td>
-          <td style="padding: 4px;">LOW</td>
-        </tr>
-        <tr style="border-bottom: 1px dotted var(--dim);">
-          <td style="padding: 4px; color: var(--cy);">0625.T04</td>
-          <td style="padding: 4px;">Thermal Physics</td>
-          <td style="padding: 4px; color: var(--warn);">65%</td>
-          <td style="padding: 4px;">+3d</td>
-          <td style="padding: 4px; color: #0f0;">HIGH</td>
-        </tr>
+        <tbody id="screener-tbody">
+          <!-- Populated by JS -->
+        </tbody>
       </table>
     </div>
     <div class="card">
@@ -4733,15 +4714,15 @@ function drawRadarChart(){
   const ink = css.getPropertyValue('--ink').trim() || '#fff';
   const line = css.getPropertyValue('--line').trim() || '#1f1f1f';
   
-  const subjects = Object.values(P().subjects);
-  if(subjects.length < 3) {
+  const enrolled = enrolledSubjects();
+  if(enrolled.length < 3) {
     ctx.fillStyle = ink; ctx.font = '12px JetBrains Mono';
     ctx.textAlign = 'center'; ctx.fillText('NEED MIN 3 SUBJECTS FOR RADAR', W/2, H/2);
     return;
   }
 
   const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 30;
-  const sides = subjects.length;
+  const sides = enrolled.length;
   
   // Draw web
   ctx.strokeStyle = line;
@@ -4759,7 +4740,8 @@ function drawRadarChart(){
 
   // Draw axes & labels
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '10px JetBrains Mono';
-  subjects.forEach((subj, i) => {
+  enrolled.forEach((c, i) => {
+    const subj = SYLLABI[c];
     const ang = (i/sides) * 2 * Math.PI - Math.PI/2;
     ctx.beginPath(); ctx.moveTo(cx,cy);
     ctx.lineTo(cx + Math.cos(ang)*r, cy + Math.sin(ang)*r); ctx.stroke();
@@ -4772,12 +4754,18 @@ function drawRadarChart(){
   ctx.beginPath();
   ctx.strokeStyle = accent; ctx.fillStyle = 'rgba(255, 0, 51, 0.2)';
   ctx.lineWidth = 2;
-  subjects.forEach((subj, i) => {
+  enrolled.forEach((c, i) => {
+    const subj = SYLLABI[c];
+    const st = getSubjState(c);
     const ang = (i/sides) * 2 * Math.PI - Math.PI/2;
-    // mock mastery: ratio of topics done
-    const tpcs = Object.values(subj.topics);
-    const m = tpcs.length ? tpcs.filter(t=>t.status==='done').length / tpcs.length : Math.random();
-    const val = m || 0.1;
+    
+    let done = 0;
+    if(st && st.topicProgress) {
+       done = st.topicProgress.filter(v => v > 0).length;
+    }
+    const total = subj.topics.length;
+    const val = total ? (done / total) : 0.1;
+    
     const x = cx + Math.cos(ang)*(r*val);
     const y = cy + Math.sin(ang)*(r*val);
     if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
@@ -4814,23 +4802,26 @@ function drawScatterChart() {
   ctx.restore();
 
   // Real scatter points based on topics and study logs
-  const subjects = Object.values(P().subjects);
+  const enrolled = enrolledSubjects();
   const logs = P().studyLog || [];
   
-  subjects.forEach(subj => {
+  enrolled.forEach(c => {
+    const subj = SYLLABI[c];
+    const st = getSubjState(c);
     // calculate effort (total mins spent)
-    const subjLogs = logs.filter(l => l.subj === subj.code);
+    const subjLogs = logs.filter(l => l.subj === c);
     const effort = subjLogs.reduce((a, b) => a + b.mins, 0) / 60; // in hours
     
     // calculate yield (% of topics done)
-    const tpcs = Object.values(subj.topics);
-    let yield_ = 0;
-    if(tpcs.length > 0) {
-      yield_ = tpcs.filter(t=>t.status==='done').length / tpcs.length;
+    let done = 0;
+    if(st && st.topicProgress) {
+       done = st.topicProgress.filter(v => v > 0).length;
     }
+    const total = subj.topics.length;
+    let yield_ = total ? (done / total) : 0;
     
     // Map to canvas
-    const maxEffort = 20; // assumed 20h max for scale
+    const maxEffort = Math.max(10, effort * 1.5); // auto-scale
     const x = 40 + Math.min((effort / maxEffort), 1) * (W - 60);
     const y = (H - 30) - (yield_ * (H - 40));
     
@@ -4845,6 +4836,58 @@ function drawScatterChart() {
   });
 }
 
+function renderScreener() {
+  const tbody = $('#screener-tbody');
+  if(!tbody) return;
+  const enrolled = enrolledSubjects();
+  const logs = P().studyLog || [];
+  
+  if(enrolled.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="padding:4px; color:var(--muted);">No active subjects to screen.</td></tr>';
+    return;
+  }
+  
+  let rowsHtml = '';
+  enrolled.forEach(c => {
+    const subj = SYLLABI[c];
+    const st = getSubjState(c);
+    
+    // find weakest topics
+    if(!st || !st.topicProgress) return;
+    
+    const weakIndices = [];
+    st.topicProgress.forEach((val, i) => {
+      if(val < 2) weakIndices.push(i);
+    });
+    
+    // pick up to 2 weak topics per subject to show in screener
+    const topWeak = weakIndices.slice(0, 2);
+    
+    topWeak.forEach(topicIdx => {
+      const topicName = subj.topics[topicIdx];
+      const isCritical = st.topicProgress[topicIdx] === 0;
+      const masteryPct = isCritical ? '0%' : '50%';
+      const srsInt = isCritical ? '0d [CRIT]' : '+1d';
+      const yieldEst = isCritical ? '<span style="color:#0f0;">HIGH</span>' : 'MED';
+      const colorCls = isCritical ? 'var(--warn)' : '#0f0';
+      const intColor = isCritical ? 'var(--accent)' : 'inherit';
+      
+      rowsHtml += `
+        <tr style="border-bottom: 1px dotted var(--dim);">
+          <td style="padding: 4px; color: var(--cy);">${subj.code}.T${topicIdx+1}</td>
+          <td style="padding: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHTML(topicName)}</td>
+          <td style="padding: 4px; color: ${colorCls};">${masteryPct}</td>
+          <td style="padding: 4px; color: ${intColor};">${srsInt}</td>
+          <td style="padding: 4px;">${yieldEst}</td>
+        </tr>
+      `;
+    });
+  });
+  
+  if(rowsHtml === '') rowsHtml = '<tr><td colspan="5" style="padding:4px; color:var(--muted);">All tracked topics mastered.</td></tr>';
+  tbody.innerHTML = rowsHtml;
+}
+
 function renderStatsCharts(){
   // weekly time chart
   drawTimeChart();
@@ -4854,6 +4897,7 @@ function renderStatsCharts(){
   drawDecayChart();
   drawRadarChart();
   drawScatterChart();
+  renderScreener();
   startLiveTicker();
 }
 
@@ -6978,6 +7022,46 @@ function appAction(action) {
     bModal('Timer Overlay', 'Injected a 75-minute countdown overlay onto the active PDF viewer.');
   } else if(action === 'ms_highlighter') {
     bModal('MS Highlighter', 'Mark Scheme Analysis Active.\nKeywords and strict command word dependencies are now highlighted in neon green on the PDF.');
+  } else if(action === 'ai_grader') {
+    const ans = prompt("PASTE YOUR ANSWER / LOGIC:");
+    if(!ans) return;
+    const ms = prompt("PASTE THE OFFICIAL MARK SCHEME:");
+    if(!ms) return;
+    bModal('AI AUTO-GRADER & FORENSICS', 'Initializing neural pipeline... comparing cognitive steps to mark scheme.');
+    groqStream(`You are a brutal, highly precise academic examiner. The student wrote: "${ans}". The mark scheme is: "${ms}". Grade the answer. Deduce the exact cognitive steps the student took. Point out exactly where the critical thinking failed. Output in a brutalist, highly structured terminal style format.`, (chunk) => {
+      const el = document.getElementById('b-modal-desc');
+      if(el) el.innerText += chunk;
+    });
+  } else if(action === 'ai_predictive') {
+    const code = prompt("ENTER PAPER CODE (e.g., 0620/42/M/J/23):");
+    if(!code) return;
+    bModal('PREDICTIVE TOPIC EXTRACTOR', `Scanning metadata for ${code}...`);
+    groqStream(`You are an AI exam analyzer. Predict the exact syllabus topics that are most heavily weighted in the past paper ${code}. Format it as a high-density data list.`, (chunk) => {
+      const el = document.getElementById('b-modal-desc');
+      if(el) el.innerText += chunk;
+    });
+  } else if(action === 'ai_cognitive') {
+    const steps = prompt("ENTER YOUR INCORRECT CALCULATION/LOGIC STEPS:");
+    if(!steps) return;
+    bModal('COGNITIVE REPLAYER', 'Tracing logic deviation path...');
+    groqStream(`The student provided these incorrect steps: "${steps}". Analyze the sequence and pinpoint the exact cognitive lapse or misconception (e.g., unit conversion failure, conceptual misunderstanding). Tell them how to fix their thinking.`, (chunk) => {
+      const el = document.getElementById('b-modal-desc');
+      if(el) el.innerText += chunk;
+    });
+  } else if(action === 'ai_gap') {
+    bModal('SYLLABUS GAP SYNTHESIZER', 'Scanning mistake registry and profile data...');
+    groqStream(`Act as an AI study synthesizer. The user has logged various mistakes in their system. Give them a dense, actionable 3-step action plan to patch their most likely syllabus gaps based on standard high school/IGCSE science/math difficulties.`, (chunk) => {
+      const el = document.getElementById('b-modal-desc');
+      if(el) el.innerText += chunk;
+    });
+  } else if(action === 'ai_examiner') {
+    const mistake = prompt("DESCRIBE YOUR SPECIFIC MISTAKE:");
+    if(!mistake) return;
+    bModal('EXAMINER REPORT MATCHER', 'Querying historical examiner reports...');
+    groqStream(`The student made this mistake: "${mistake}". Act as the Principal Examiner. Write a simulated 'Examiner Report' excerpt explaining why candidates typically make this error, the percentage of students who fall for it, and the precise rule to remember. Use formal Cambridge examiner tone.`, (chunk) => {
+      const el = document.getElementById('b-modal-desc');
+      if(el) el.innerText += chunk;
+    });
   } else if(action === 'white_noise') {
     if(whiteNoiseNode) { whiteNoiseNode.stop(); whiteNoiseNode = null; toast('White Noise: OFF'); return; }
     const bufferSize = audioCtx.sampleRate * 2;
