@@ -1,0 +1,4351 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+ SIEGE // Study Terminal for IGCSE
+ Version 1.0.0
+ © 2026 — Single-user commercial license
+ No resale, no redistribution.
+ Built for students who hate studying but need to grind.
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#050505">
+<meta name="description" content="SIEGE — AI-powered IGCSE study terminal. Real past papers, no hallucinated questions.">
+<title>SIEGE // study terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Major+Mono+Display&family=VT323&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   THEMES — pure black brutalist · 3 variants
+   ============================================================ */
+:root,
+[data-theme="red"]{
+  --bg:#050505;
+  --bg-2:#0c0c0c;
+  --bg-3:#141414;
+  --ink:#f2f2f2;
+  --ink-dim:#bcbcbc;
+  --muted:#666;
+  --dim:#3a3a3a;
+  --line:#1f1f1f;
+  --accent:#ff0033;
+  --accent-dim:#7a0019;
+  --accent-rgb:255,0,51;
+  --sec:#00ffe0;
+  --sec-dim:#005c52;
+  --warn:#ffcc00;
+  --ok:#00ff88;
+  --bad:#ff0033;
+  --chem:#ff0033;
+  --bio:#00ff88;
+  --phys:#00ffe0;
+  --math:#ffcc00;
+  --eng:#ff66cc;
+  --ar:#ff8800;
+  --hum:#9966ff;
+  --biz:#66ccff;
+  --comp:#ccff00;
+  --lit:#ff5577;
+}
+[data-theme="green"]{
+  --bg:#020a04;
+  --bg-2:#031408;
+  --bg-3:#04200d;
+  --ink:#d4ffe1;
+  --ink-dim:#7fd99c;
+  --muted:#3a6047;
+  --dim:#1f3527;
+  --line:#0e1c14;
+  --accent:#00ff41;
+  --accent-dim:#006619;
+  --accent-rgb:0,255,65;
+  --sec:#80ff80;
+  --sec-dim:#205520;
+  --warn:#ffd700;
+  --ok:#80ff80;
+  --bad:#ff4040;
+}
+[data-theme="mono"]{
+  --bg:#000;
+  --bg-2:#0a0a0a;
+  --bg-3:#161616;
+  --ink:#ffffff;
+  --ink-dim:#bbbbbb;
+  --muted:#777;
+  --dim:#404040;
+  --line:#222;
+  --accent:#ffffff;
+  --accent-dim:#999;
+  --accent-rgb:255,255,255;
+  --sec:#aaaaaa;
+  --sec-dim:#555;
+  --warn:#ffffff;
+  --ok:#ffffff;
+  --bad:#ffffff;
+}
+
+:root{
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --display:'Major Mono Display',monospace;
+  --term:'VT323',monospace;
+  --ar-font:'Noto Naskh Arabic',serif;
+  --tx:0.12s ease;
+}
+
+/* ============================================================
+   RESET + BASE
+   ============================================================ */
+*{box-sizing:border-box;margin:0;padding:0}
+*::selection{background:var(--accent);color:var(--bg)}
+html,body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--mono);font-size:13px;line-height:1.5;
+  min-height:100vh;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+[dir="rtl"] body{font-family:var(--ar-font),var(--mono)}
+body{
+  background-image:
+    linear-gradient(var(--line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:40px 40px;background-position:-1px -1px;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,0.012) 0,rgba(255,255,255,0.012) 1px,transparent 1px,transparent 3px);
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:2;
+  background:radial-gradient(ellipse at top,transparent 0%,rgba(0,0,0,0.5) 100%);
+}
+a{color:var(--sec);text-decoration:none}
+a:hover{color:var(--accent)}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--dim)}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+.app{position:relative;z-index:3;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+@media(max-width:900px){.app{grid-template-columns:1fr}}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar{
+  border-right:2px solid var(--ink);background:var(--bg);
+  padding:20px 0;position:sticky;top:0;height:100vh;overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+@media(max-width:900px){
+  .sidebar{position:fixed;left:-260px;width:240px;transition:left 0.2s;z-index:90;border-right:2px solid var(--accent)}
+  .sidebar.open{left:0}
+  .sidebar-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:80;display:none}
+  .sidebar-backdrop.show{display:block}
+}
+.sb-brand{padding:0 20px 24px;border-bottom:2px solid var(--line);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.sb-mark{
+  width:32px;height:32px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-size:14px;color:var(--bg);
+  border:2px solid var(--ink);flex-shrink:0;
+}
+.sb-name{font-family:var(--display);font-size:14px;letter-spacing:2px;line-height:1}
+.sb-sub{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+
+.sb-profile{padding:12px 20px;border-bottom:2px solid var(--line);margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all var(--tx)}
+.sb-profile:hover{background:var(--bg-2)}
+.sb-avatar{
+  width:28px;height:28px;background:var(--bg-3);border:2px solid var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-size:12px;flex-shrink:0;
+}
+.sb-pn{flex:1;overflow:hidden}
+.sb-pn-name{font-size:11px;color:var(--ink);text-transform:lowercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-pn-meta{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.sb-pn-icon{color:var(--muted);font-size:14px}
+
+.sb-nav{flex:1;padding:8px 0;display:flex;flex-direction:column;gap:1px}
+.sb-item{
+  display:flex;align-items:center;gap:12px;padding:10px 20px;
+  background:transparent;border:none;border-left:3px solid transparent;
+  color:var(--muted);font-family:var(--mono);font-size:11px;
+  letter-spacing:1.5px;text-transform:uppercase;font-weight:700;
+  cursor:pointer;text-align:left;width:100%;transition:all var(--tx);
+}
+.sb-item:hover{color:var(--ink);background:var(--bg-2)}
+.sb-item.active{color:var(--accent);background:var(--bg-2);border-left-color:var(--accent)}
+.sb-icon{width:14px;font-family:var(--term);font-size:14px;flex-shrink:0;color:inherit}
+.sb-foot{padding:16px 20px;border-top:2px solid var(--line);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.sb-foot .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.sb-foot .row:last-child{margin-bottom:0}
+.sb-foot b{color:var(--ink-dim);font-weight:700}
+.sb-foot .dot{display:inline-block;width:5px;height:5px;background:var(--ok);border-radius:50%;margin-right:5px;animation:pulse 1.6s ease infinite}
+.sb-foot .dot.off{background:var(--muted);animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* mobile nav button */
+.mobile-nav-btn{display:none;position:fixed;top:14px;left:14px;z-index:95;background:var(--accent);border:2px solid var(--ink);color:var(--bg);font-family:var(--display);font-size:14px;width:42px;height:42px;align-items:center;justify-content:center;cursor:pointer}
+@media(max-width:900px){.mobile-nav-btn{display:flex}}
+
+/* ============================================================
+   MAIN AREA
+   ============================================================ */
+.main{padding:32px 32px 80px;overflow-x:hidden;max-width:100%}
+@media(max-width:900px){.main{padding:72px 16px 60px}}
+
+.section{display:none;animation:fadeIn 0.25s ease}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid var(--ink);gap:16px;flex-wrap:wrap}
+.section-head h2{font-family:var(--display);font-size:clamp(22px,4vw,34px);text-transform:lowercase;letter-spacing:1px;line-height:1}
+.section-head .meta{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px}
+
+/* ============================================================
+   CARDS / GRIDS
+   ============================================================ */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:1100px){.grid-4,.grid-5{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){.grid-2,.grid-3,.grid-4,.grid-5{grid-template-columns:1fr}}
+
+.card{
+  border:2px solid var(--ink);background:var(--bg-2);padding:20px;position:relative;
+}
+.card.flush{padding:0}
+.card.flush .card-tag{top:-11px}
+.card.flush .card-body{padding:20px}
+.card-tag{position:absolute;top:-11px;left:16px;background:var(--bg);padding:0 8px;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:700}
+.card-tag.hot{color:var(--accent)}
+.card-tag.cy{color:var(--sec)}
+.card-tag.warn{color:var(--warn)}
+.card-tag.ok{color:var(--ok)}
+.card h3{font-family:var(--display);font-size:16px;text-transform:lowercase;margin-bottom:10px;letter-spacing:1px}
+.card p{font-size:12px;color:var(--ink-dim);margin-bottom:8px}
+.card p:last-child{margin-bottom:0}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{
+  border:2px solid var(--ink);padding:28px;margin-bottom:24px;position:relative;
+  background:linear-gradient(135deg,rgba(var(--accent-rgb),0.04) 0%,transparent 60%);
+}
+.hero::before{content:"[ TODAY ]";position:absolute;top:-11px;left:24px;background:var(--bg);padding:0 10px;font-size:10px;letter-spacing:3px;color:var(--accent);font-weight:700}
+.hero h1{font-family:var(--display);font-size:clamp(26px,4.5vw,46px);line-height:1;text-transform:lowercase;margin-bottom:10px}
+.hero-meta{display:flex;gap:20px;flex-wrap:wrap;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:18px}
+.hero-meta span b{color:var(--ink);font-weight:700}
+.hero-meta span.acc b{color:var(--accent)}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn{
+  background:var(--ink);color:var(--bg);border:2px solid var(--ink);
+  padding:10px 18px;font-family:var(--mono);font-size:11px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all var(--tx);
+  display:inline-flex;align-items:center;gap:8px;line-height:1;
+}
+.btn:hover{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.btn:disabled{background:var(--dim);border-color:var(--dim);color:var(--muted);cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.ghost:hover{background:var(--ink);color:var(--bg)}
+.btn.hot{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.btn.hot:hover{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn.cy{background:var(--sec);border-color:var(--sec);color:var(--bg)}
+.btn.warn{background:var(--warn);border-color:var(--warn);color:var(--bg)}
+.btn.sm{padding:6px 10px;font-size:10px;letter-spacing:1.5px}
+.btn.xs{padding:4px 8px;font-size:9px;letter-spacing:1px}
+.btn.danger{color:var(--bad);border-color:var(--bad);background:transparent}
+.btn.danger:hover{background:var(--bad);color:var(--bg)}
+.btn.full{width:100%;justify-content:center}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* ============================================================
+   FORM
+   ============================================================ */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:6px;font-weight:700}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--bg);border:2px solid var(--dim);padding:10px 12px;
+  color:var(--ink);font-family:var(--mono);font-size:13px;outline:none;transition:border-color var(--tx);
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{min-height:80px;resize:vertical;font-family:var(--mono)}
+.field-hint{font-size:10px;color:var(--muted);margin-top:4px}
+.field-hint a{color:var(--sec)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+/* checkbox-style toggles */
+.chk{display:inline-flex;align-items:center;gap:8px;cursor:pointer;padding:6px 10px;border:1px solid var(--dim);background:var(--bg);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;transition:all var(--tx)}
+.chk:hover{border-color:var(--ink);color:var(--ink)}
+.chk.on{border-color:var(--accent);color:var(--accent);background:rgba(var(--accent-rgb),0.06)}
+.chk input{display:none}
+
+/* segmented */
+.seg{display:flex;border:2px solid var(--ink)}
+.seg button{flex:1;padding:8px;background:var(--bg);border:none;color:var(--muted);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border-right:2px solid var(--ink);transition:all var(--tx)}
+.seg button:last-child{border-right:none}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:var(--ink);color:var(--bg)}
+
+/* ============================================================
+   STATS
+   ============================================================ */
+.stat-big{font-family:var(--term);font-size:54px;line-height:1;color:var(--ink)}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-top:4px}
+.stat-sub{font-size:11px;color:var(--ink-dim);margin-top:6px}
+
+/* progress bars */
+.subj-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line)}
+.subj-row:first-child{border-top:none}
+.subj-tag{width:90px;font-family:var(--display);font-size:12px;text-transform:lowercase;letter-spacing:1px;color:var(--ink)}
+.subj-bar-wrap{flex:1;height:14px;background:var(--bg);border:1px solid var(--dim);position:relative;overflow:hidden}
+.subj-bar{height:100%;background:var(--ink);transition:width 0.4s;background:repeating-linear-gradient(45deg,var(--accent) 0,var(--accent) 6px,var(--accent-dim) 6px,var(--accent-dim) 12px)}
+.subj-pct{font-family:var(--term);font-size:20px;width:54px;text-align:right;color:var(--ink)}
+
+/* ============================================================
+   MISSION
+   ============================================================ */
+.mission-list{margin-top:14px}
+.mission-item{
+  display:flex;align-items:flex-start;gap:14px;padding:14px;border:1px solid var(--line);
+  margin-bottom:8px;background:var(--bg);transition:all var(--tx);cursor:pointer;
+}
+.mission-item:hover{border-color:var(--ink)}
+.mission-item.done{opacity:0.4}
+.mission-item.done .mission-task{text-decoration:line-through}
+.mission-check{
+  width:22px;height:22px;border:2px solid var(--ink);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--bg);
+}
+.mission-item.done .mission-check{background:var(--ok);color:var(--bg)}
+.mission-item.done .mission-check::after{content:"✕"}
+.mission-body{flex:1}
+.mission-task{font-size:13px;font-weight:500;color:var(--ink);line-height:1.5}
+.mission-meta{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-top:6px;display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:2px 7px;border:1px solid var(--dim);color:var(--muted);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700}
+.pill.hot{color:var(--accent);border-color:var(--accent);background:rgba(var(--accent-rgb),0.06)}
+.pill.cy{color:var(--sec);border-color:var(--sec);background:rgba(0,255,224,0.06)}
+.pill.warn{color:var(--warn);border-color:var(--warn);background:rgba(255,204,0,0.06)}
+.pill.ok{color:var(--ok);border-color:var(--ok)}
+.pill.subj{color:var(--ink);border-color:var(--ink)}
+.mission-act{display:flex;gap:6px;align-items:center}
+
+/* paper link inside mission */
+.mission-task a.pcode{color:var(--accent);border-bottom:1px dashed var(--accent);padding:0 2px}
+.mission-task a.pcode:hover{background:var(--accent);color:var(--bg)}
+
+/* ============================================================
+   TOPIC LIST
+   ============================================================ */
+.topic-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;margin-top:16px}
+.topic{
+  padding:12px;border:1px solid var(--line);background:var(--bg);cursor:pointer;
+  display:flex;align-items:center;gap:10px;transition:all var(--tx);
+}
+.topic:hover{border-color:var(--ink);background:var(--bg-2)}
+.topic-status{
+  width:18px;height:18px;border:2px solid var(--dim);flex-shrink:0;font-family:var(--term);font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+}
+.topic.s-1 .topic-status{background:var(--warn);border-color:var(--warn);color:var(--bg)}
+.topic.s-1 .topic-status::after{content:"~"}
+.topic.s-2 .topic-status{background:var(--ok);border-color:var(--ok);color:var(--bg)}
+.topic.s-2 .topic-status::after{content:"✓"}
+.topic-name{font-size:12px;color:var(--ink);flex:1}
+.topic.s-0 .topic-name{color:var(--muted)}
+.topic-num{font-family:var(--term);font-size:14px;color:var(--muted);margin-right:4px}
+.topic-act{font-size:10px;color:var(--muted);padding:2px 6px;border:1px solid var(--dim);text-transform:uppercase;letter-spacing:1px}
+.topic-act:hover{color:var(--accent);border-color:var(--accent)}
+
+/* ============================================================
+   PAPERS
+   ============================================================ */
+.paper-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.paper-filters select,.paper-filters input{background:var(--bg);border:1px solid var(--dim);color:var(--ink);padding:6px 8px;font-family:var(--mono);font-size:11px}
+.paper-filters .filt-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-right:4px}
+
+.paper-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.paper-cell{
+  padding:10px;border:1px solid var(--line);background:var(--bg);cursor:pointer;
+  font-size:11px;transition:all var(--tx);position:relative;
+}
+.paper-cell:hover{border-color:var(--ink);background:var(--bg-2)}
+.paper-code{font-family:var(--term);font-size:18px;color:var(--ink);line-height:1}
+.paper-meta{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.paper-cell.attempted{border-color:var(--warn)}
+.paper-cell.done{border-color:var(--ok)}
+.paper-cell.done .paper-code{color:var(--ok)}
+.paper-score{position:absolute;top:6px;right:8px;font-family:var(--term);font-size:14px;color:var(--ok)}
+.paper-links{display:flex;gap:4px;margin-top:6px}
+.paper-links a{font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:1px 5px;border:1px solid var(--dim);color:var(--muted)}
+.paper-links a:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ============================================================
+   CHAT / AI
+   ============================================================ */
+.ai-modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:20px}
+.mode-card{
+  padding:14px;border:2px solid var(--line);background:var(--bg-2);cursor:pointer;
+  transition:all var(--tx);position:relative;
+}
+.mode-card:hover{border-color:var(--ink)}
+.mode-card.active{border-color:var(--accent);background:rgba(var(--accent-rgb),0.06)}
+.mode-card.active::before{content:"";position:absolute;top:0;left:0;width:100%;height:3px;background:var(--accent)}
+.mode-icon{font-family:var(--term);font-size:22px;color:var(--accent);margin-bottom:6px}
+.mode-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--ink);margin-bottom:4px}
+.mode-desc{font-size:10px;color:var(--muted);line-height:1.4}
+
+.chat-box{
+  border:2px solid var(--ink);background:var(--bg-2);
+  display:flex;flex-direction:column;height:560px;
+}
+.chat-head{padding:12px 16px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.chat-head-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-weight:700}
+.chat-head-status{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:1.5px}
+.chat-head-status .dot{width:6px;height:6px;background:var(--ok);border-radius:50%;animation:pulse 1.4s ease infinite}
+.chat-head-status.off .dot{background:var(--muted);animation:none}
+.chat-log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.chat-msg{font-size:13px;line-height:1.6;padding-left:16px;border-left:2px solid var(--sec)}
+.chat-msg.user::before{content:"YOU // ";font-size:9px;letter-spacing:2px;color:var(--sec);text-transform:uppercase;display:block;margin-bottom:4px;font-weight:700}
+.chat-msg.ai{border-left-color:var(--accent)}
+.chat-msg.ai::before{content:"SIEGE // ";font-size:9px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:4px;font-weight:700}
+.chat-msg.assistant{border-left-color:var(--accent)}
+.chat-msg.assistant::before{content:"SIEGE // ";font-size:9px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:4px;font-weight:700}
+.chat-msg.sys{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-align:center;padding:4px 0;border:none}
+.chat-msg p{margin-bottom:8px}
+.chat-msg p:last-child{margin-bottom:0}
+.chat-msg code{background:var(--bg);padding:1px 5px;border:1px solid var(--dim);font-size:12px;font-family:var(--mono)}
+.chat-msg pre{background:var(--bg);padding:10px;border:1px solid var(--dim);overflow-x:auto;font-size:12px;margin:8px 0;font-family:var(--mono)}
+.chat-msg ul,.chat-msg ol{margin-left:18px;margin-bottom:8px}
+.chat-msg ul li,.chat-msg ol li{margin-bottom:4px}
+.chat-msg strong{color:var(--accent)}
+.chat-msg em{color:var(--sec)}
+.chat-msg h3{font-family:var(--display);font-size:14px;color:var(--ink);margin:10px 0 6px;text-transform:lowercase;letter-spacing:1px}
+.chat-msg a.pcode{color:var(--accent);border-bottom:1px dashed var(--accent);padding:0 2px;font-family:var(--term);font-size:14px}
+.chat-msg a.pcode:hover{background:var(--accent);color:var(--bg)}
+
+.chat-input-row{display:flex;border-top:2px solid var(--ink)}
+.chat-input{flex:1;background:var(--bg);border:none;padding:14px 16px;color:var(--ink);font-family:var(--mono);font-size:13px;outline:none}
+.chat-input:focus{background:var(--bg-2)}
+.chat-send{background:var(--accent);border:none;color:var(--bg);padding:0 24px;font-family:var(--mono);font-weight:700;font-size:11px;letter-spacing:2px;cursor:pointer;border-left:2px solid var(--ink)}
+.chat-send:hover{background:var(--ink)}
+.chat-send:disabled{background:var(--dim);cursor:not-allowed}
+.quick-prompts{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.quick-prompt{padding:6px 10px;border:1px solid var(--dim);background:var(--bg);color:var(--muted);font-size:10px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all var(--tx);font-family:var(--mono)}
+.quick-prompt:hover{border-color:var(--accent);color:var(--accent)}
+.chat-empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.chat-empty .big{font-family:var(--display);font-size:24px;color:var(--ink);margin-bottom:8px;text-transform:lowercase}
+
+.streaming-cursor{display:inline-block;width:8px;height:14px;background:var(--accent);margin-left:2px;animation:blink 1s steps(2) infinite;vertical-align:text-bottom}
+@keyframes blink{50%{opacity:0}}
+
+/* ============================================================
+   POMODORO
+   ============================================================ */
+.pomo-wrap{border:2px solid var(--ink);padding:24px;background:var(--bg-2);text-align:center;position:relative}
+.pomo-time{font-family:var(--term);font-size:96px;line-height:1;color:var(--accent);margin:14px 0}
+.pomo-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:3px}
+.pomo-mode{font-size:14px;color:var(--ink);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.pomo-ctrl{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.pomo-subj{margin-top:16px;font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:1.5px}
+.pomo-subj b{color:var(--accent)}
+
+/* ============================================================
+   STATS / CHARTS
+   ============================================================ */
+.chart-box{padding:16px;border:1px solid var(--dim);background:var(--bg);margin-top:12px}
+.chart-box canvas{max-width:100%;display:block}
+.heatmap{display:grid;grid-template-columns:repeat(52,1fr);gap:2px;margin-top:8px}
+.heatmap-cell{aspect-ratio:1;background:var(--bg);border:1px solid var(--line);transition:all var(--tx);position:relative}
+.heatmap-cell:hover{outline:1px solid var(--ink);z-index:2}
+.heatmap-cell[data-lvl="0"]{background:var(--bg-2)}
+.heatmap-cell[data-lvl="1"]{background:rgba(var(--accent-rgb),0.25)}
+.heatmap-cell[data-lvl="2"]{background:rgba(var(--accent-rgb),0.5)}
+.heatmap-cell[data-lvl="3"]{background:rgba(var(--accent-rgb),0.8)}
+.heatmap-cell[data-lvl="4"]{background:var(--accent)}
+.heatmap-legend{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:10px;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.heatmap-legend .sq{width:10px;height:10px;border:1px solid var(--line)}
+
+/* ============================================================
+   NOTES VAULT
+   ============================================================ */
+.notes-grid{display:grid;grid-template-columns:240px 1fr;gap:16px;margin-top:16px;min-height:400px}
+@media(max-width:800px){.notes-grid{grid-template-columns:1fr}}
+.notes-side{border:1px solid var(--dim);background:var(--bg);padding:8px;overflow-y:auto;max-height:500px}
+.notes-side .nitem{padding:8px 10px;cursor:pointer;font-size:11px;border-left:2px solid transparent;color:var(--ink-dim);transition:all var(--tx)}
+.notes-side .nitem:hover{background:var(--bg-2);color:var(--ink)}
+.notes-side .nitem.active{border-left-color:var(--accent);color:var(--ink);background:var(--bg-2)}
+.notes-side .nitem .nt{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.notes-edit{display:flex;flex-direction:column;gap:0;border:1px solid var(--dim)}
+.notes-edit textarea{flex:1;min-height:400px;background:var(--bg);border:none;padding:14px;color:var(--ink);font-family:var(--mono);font-size:13px;outline:none;resize:none}
+.notes-edit-foot{padding:8px 12px;border-top:1px solid var(--dim);display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+
+/* ============================================================
+   MISTAKE LOG
+   ============================================================ */
+.mistake-item{border:1px solid var(--line);padding:14px;margin-bottom:8px;background:var(--bg);position:relative}
+.mistake-item .mi-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.mistake-item .mi-q{font-size:13px;color:var(--ink);margin-bottom:6px;line-height:1.5}
+.mistake-item .mi-exp{font-size:12px;color:var(--ink-dim);background:var(--bg-2);padding:10px;border-left:2px solid var(--sec);margin-top:8px}
+.mistake-item .mi-meta{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* ============================================================
+   FLASHCARDS
+   ============================================================ */
+.fc-wrap{border:2px solid var(--ink);background:var(--bg-2);padding:30px;text-align:center;min-height:300px;display:flex;flex-direction:column;justify-content:center;cursor:pointer;position:relative}
+.fc-side{font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px}
+.fc-content{font-size:18px;color:var(--ink);line-height:1.5;flex:1;display:flex;align-items:center;justify-content:center;padding:20px 0}
+.fc-progress{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:12px}
+.fc-ctrl{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+
+/* ============================================================
+   TERMINAL OUTPUT
+   ============================================================ */
+.term-out{
+  background:var(--bg);border:1px solid var(--dim);padding:14px;margin-top:12px;
+  font-family:var(--term);font-size:16px;line-height:1.4;color:var(--ok);
+  max-height:300px;overflow-y:auto;
+}
+.term-out .line{white-space:pre-wrap;word-break:break-word}
+.term-out .line.warn{color:var(--warn)}
+.term-out .line.hot{color:var(--accent)}
+.term-out .line.dim{color:var(--muted)}
+.term-out .line.ok{color:var(--ok)}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.15s ease}
+.modal-bg.show{display:flex}
+.modal{background:var(--bg-2);border:2px solid var(--ink);padding:28px;max-width:520px;width:100%;position:relative;max-height:90vh;overflow-y:auto}
+.modal.wide{max-width:760px}
+.modal h3{font-family:var(--display);font-size:22px;margin-bottom:18px;text-transform:lowercase;padding-right:30px}
+.modal-close{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--ink);font-size:22px;cursor:pointer;width:30px;height:30px}
+.modal-close:hover{color:var(--accent)}
+
+/* ============================================================
+   ONBOARDING WIZARD
+   ============================================================ */
+.wiz-bg{position:fixed;inset:0;background:var(--bg);z-index:300;display:none;flex-direction:column;overflow-y:auto}
+.wiz-bg.show{display:flex}
+.wiz-bg::before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,0.02) 0,rgba(255,255,255,0.02) 1px,transparent 1px,transparent 3px);z-index:1}
+.wiz-head{padding:24px 32px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center;position:relative;z-index:5}
+.wiz-head .wh-brand{display:flex;align-items:center;gap:10px}
+.wiz-head .wh-brand .sb-mark{width:36px;height:36px;font-size:16px}
+.wiz-head .wh-step{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px}
+.wiz-head .wh-step b{color:var(--accent)}
+.wiz-prog{height:4px;background:var(--line);position:relative;z-index:5}
+.wiz-prog-bar{height:100%;background:var(--accent);transition:width 0.3s}
+.wiz-body{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px;position:relative;z-index:5}
+.wiz-card{max-width:680px;width:100%}
+.wiz-card h1{font-family:var(--display);font-size:clamp(28px,5vw,46px);line-height:1.1;text-transform:lowercase;margin-bottom:14px}
+.wiz-card .wiz-sub{font-size:13px;color:var(--ink-dim);margin-bottom:30px;line-height:1.6}
+.wiz-foot{padding:20px 32px;border-top:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center;position:relative;z-index:5}
+@media(max-width:600px){.wiz-head,.wiz-foot,.wiz-body{padding-left:16px;padding-right:16px}}
+
+.wiz-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.wiz-opt{padding:18px;border:2px solid var(--line);background:var(--bg-2);cursor:pointer;transition:all var(--tx);text-align:left}
+.wiz-opt:hover{border-color:var(--ink)}
+.wiz-opt.on{border-color:var(--accent);background:rgba(var(--accent-rgb),0.06)}
+.wiz-opt-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px}
+.wiz-opt-desc{font-size:11px;color:var(--muted);line-height:1.4}
+.wiz-opt-code{font-family:var(--term);font-size:14px;color:var(--accent);margin-bottom:6px}
+
+.wiz-subj-list{max-height:380px;overflow-y:auto;border:1px solid var(--dim);background:var(--bg)}
+.wiz-subj-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;transition:all var(--tx)}
+.wiz-subj-row:hover{background:var(--bg-2)}
+.wiz-subj-row.on{background:rgba(var(--accent-rgb),0.08)}
+.wiz-subj-row .wsr-chk{width:18px;height:18px;border:2px solid var(--dim);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.wiz-subj-row.on .wsr-chk{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.wiz-subj-row.on .wsr-chk::after{content:"✓"}
+.wiz-subj-row .wsr-code{font-family:var(--term);font-size:14px;color:var(--accent);width:60px}
+.wiz-subj-row .wsr-name{flex:1;font-size:12px;color:var(--ink)}
+.wiz-subj-row .wsr-board{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+
+.wiz-strength{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px}
+.wiz-strength button{padding:6px;background:var(--bg);border:1px solid var(--dim);color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all var(--tx)}
+.wiz-strength button:hover{color:var(--ink)}
+.wiz-strength button.on{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+
+.wiz-search{margin-bottom:10px}
+.wiz-search input{width:100%;background:var(--bg);border:1px solid var(--dim);padding:8px 12px;color:var(--ink);font-family:var(--mono);font-size:12px;outline:none}
+.wiz-search input:focus{border-color:var(--accent)}
+
+.wiz-strap{padding:16px;border:1px solid var(--accent);background:rgba(var(--accent-rgb),0.05);margin-bottom:24px;font-size:12px;color:var(--ink-dim);line-height:1.6}
+.wiz-strap b{color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;font-size:11px;display:block;margin-bottom:4px}
+
+/* ============================================================
+   COMMAND PALETTE
+   ============================================================ */
+.cmd-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;display:none;align-items:flex-start;justify-content:center;padding-top:100px}
+.cmd-bg.show{display:flex}
+.cmd{width:560px;max-width:90vw;background:var(--bg-2);border:2px solid var(--accent)}
+.cmd input{width:100%;background:var(--bg);border:none;border-bottom:1px solid var(--dim);padding:16px 18px;color:var(--ink);font-family:var(--mono);font-size:14px;outline:none}
+.cmd-results{max-height:400px;overflow-y:auto}
+.cmd-result{padding:10px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);transition:all var(--tx)}
+.cmd-result:hover,.cmd-result.sel{background:var(--bg);color:var(--accent)}
+.cmd-result-l{font-size:12px;color:var(--ink-dim)}
+.cmd-result:hover .cmd-result-l,.cmd-result.sel .cmd-result-l{color:var(--accent)}
+.cmd-result-r{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+.cmd-empty{padding:20px;text-align:center;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1.5px}
+
+/* ============================================================
+   UTILITY
+   ============================================================ */
+.muted{color:var(--muted)}
+.dim{color:var(--ink-dim)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.spacer{height:24px}
+.spacer-sm{height:12px}
+.divider{height:2px;background:var(--ink);margin:24px 0}
+.divider-thin{height:1px;background:var(--line);margin:16px 0}
+.hidden{display:none !important}
+.no-margin{margin:0}
+.center{text-align:center}
+.mono-h{font-family:var(--display);text-transform:lowercase;letter-spacing:1px}
+.term-num{font-family:var(--term);color:var(--accent)}
+
+/* toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:var(--bg);padding:14px 18px;font-size:11px;letter-spacing:2px;text-transform:uppercase;border:2px solid var(--accent);z-index:500;transform:translateX(120%);transition:transform 0.3s;font-weight:700;max-width:320px}
+.toast.show{transform:none}
+.toast.bad{border-color:var(--bad);background:var(--bad);color:var(--bg)}
+
+/* loading spinner */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--dim);border-top-color:var(--accent);animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* empty state */
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.empty .big{font-family:var(--display);font-size:24px;color:var(--ink);margin-bottom:8px;text-transform:lowercase}
+.empty .sm{font-size:12px;margin-bottom:14px;line-height:1.6}
+
+/* badge */
+.badge-noai{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--accent);color:var(--accent);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;background:rgba(var(--accent-rgb),0.04);font-weight:700}
+.badge-noai::before{content:"●";color:var(--accent)}
+
+/* ============================================================
+   PRINT
+   ============================================================ */
+@media print{
+  body{background:#fff;color:#000}
+  body::before,body::after{display:none}
+  .sidebar,.mobile-nav-btn,.sb-foot,nav,.btn,.chat-input-row,.modal-bg,.cmd-bg,.toast,.wiz-bg{display:none !important}
+  .app{grid-template-columns:1fr}
+  .main{padding:20px}
+  .card,.hero{border:1px solid #000;background:#fff;color:#000}
+  .hero h1,.section-head h2{color:#000}
+  .pill{border-color:#000;color:#000;background:#fff}
+  .mission-item{border-color:#000;background:#fff}
+  .mission-task{color:#000}
+  .print-only{display:block !important}
+  .print-page-break{page-break-after:always}
+  .stat-big,.subj-pct,.countdown-val{color:#000}
+}
+.print-only{display:none}
+
+/* ============================================================
+   RTL (Arabic)
+   ============================================================ */
+[dir="rtl"] .sb-item{border-left:none;border-right:3px solid transparent;text-align:right}
+[dir="rtl"] .sb-item.active{border-right-color:var(--accent)}
+[dir="rtl"] .chat-msg{border-left:none;border-right:2px solid var(--sec);padding-left:0;padding-right:16px}
+[dir="rtl"] .chat-msg.ai,[dir="rtl"] .chat-msg.assistant{border-right-color:var(--accent)}
+[dir="rtl"] .hero::before,[dir="rtl"] .card-tag{left:auto;right:16px}
+</style>
+</head>
+<body data-theme="red">
+
+<button class="mobile-nav-btn" id="mobile-nav-btn">≡</button>
+<div class="sidebar-backdrop" id="sb-backdrop"></div>
+
+<div class="app">
+
+<!-- ============================================================
+     SIDEBAR
+     ============================================================ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-mark">S</div>
+    <div>
+      <div class="sb-name">siege</div>
+      <div class="sb-sub">study terminal</div>
+    </div>
+  </div>
+
+  <div class="sb-profile" id="sb-profile" title="switch profile">
+    <div class="sb-avatar" id="sb-avatar">?</div>
+    <div class="sb-pn">
+      <div class="sb-pn-name" id="sb-pn-name">no profile</div>
+      <div class="sb-pn-meta" id="sb-pn-meta">tap to switch</div>
+    </div>
+    <div class="sb-pn-icon">▾</div>
+  </div>
+
+  <nav class="sb-nav" id="sb-nav">
+    <button class="sb-item active" data-tab="dash"><span class="sb-icon">▤</span><span>dashboard</span></button>
+    <button class="sb-item" data-tab="subj"><span class="sb-icon">≡</span><span>subjects</span></button>
+    <button class="sb-item" data-tab="papers"><span class="sb-icon">⊟</span><span>past papers</span></button>
+    <button class="sb-item" data-tab="ai"><span class="sb-icon">◆</span><span>siege.ai</span></button>
+    <button class="sb-item" data-tab="pomo"><span class="sb-icon">◉</span><span>pomodoro</span></button>
+    <button class="sb-item" data-tab="stats"><span class="sb-icon">▦</span><span>stats</span></button>
+    <button class="sb-item" data-tab="mistakes"><span class="sb-icon">✕</span><span>mistakes</span></button>
+    <button class="sb-item" data-tab="notes"><span class="sb-icon">▢</span><span>notes</span></button>
+    <button class="sb-item" data-tab="flash"><span class="sb-icon">◇</span><span>flashcards</span></button>
+    <button class="sb-item" data-tab="cfg"><span class="sb-icon">⚙</span><span>settings</span></button>
+    <button class="sb-item" data-tab="help"><span class="sb-icon">?</span><span>help</span></button>
+  </nav>
+
+  <div class="sb-foot">
+    <div class="row"><span><span class="dot" id="sb-ai-dot"></span>siege.ai</span><b id="sb-ai-state">offline</b></div>
+    <div class="row"><span>streak</span><b id="sb-streak">0d</b></div>
+    <div class="row"><span>v1.0.0</span><b>⌘K</b></div>
+  </div>
+</aside>
+
+<!-- ============================================================
+     MAIN
+     ============================================================ -->
+<main class="main">
+
+<!-- =========================================================
+     DASHBOARD
+     ========================================================= -->
+<section class="section active" id="sec-dash">
+  <div class="hero">
+    <h1 id="hero-title">good morning,student</h1>
+    <div class="hero-meta">
+      <span>day <b id="hero-day">--</b> of <b id="hero-total">--</b></span>
+      <span class="acc">deadline <b id="hero-deadline">--</b></span>
+      <span>exam in <b id="hero-exam">--</b> days</span>
+      <span><span class="badge-noai">real past papers · no ai hallucinations</span></span>
+    </div>
+    <div class="row">
+      <button class="btn hot" id="gen-mission">[ generate today's mission ]</button>
+      <button class="btn ghost" id="show-progress">progress.log</button>
+      <button class="btn ghost" onclick="go('ai')">open ai →</button>
+      <button class="btn ghost" onclick="window.print()">print weekly plan</button>
+    </div>
+    <div id="mission-zone" class="mission-list"></div>
+    <div id="term-zone"></div>
+  </div>
+
+  <div class="grid-4">
+    <div class="card">
+      <span class="card-tag hot">// papers</span>
+      <div class="stat-big" id="stat-papers">0</div>
+      <div class="stat-label">papers logged</div>
+    </div>
+    <div class="card">
+      <span class="card-tag cy">// streak</span>
+      <div class="stat-big" id="stat-streak">0</div>
+      <div class="stat-label">day streak</div>
+      <div class="stat-sub" id="stat-streak-sub" style="font-size:10px;color:var(--muted)">freeze available</div>
+    </div>
+    <div class="card">
+      <span class="card-tag warn">// topics</span>
+      <div class="stat-big" id="stat-topics">0</div>
+      <div class="stat-label">topics mastered</div>
+    </div>
+    <div class="card">
+      <span class="card-tag">// days left</span>
+      <div class="stat-big" id="stat-days">--</div>
+      <div class="stat-label">till deadline</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="card-tag">// syllabus coverage</span>
+    <div id="dash-bars" style="margin-top:8px"></div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="grid-2">
+    <div class="card">
+      <span class="card-tag cy">// weak areas (this week)</span>
+      <div id="dash-weak" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <span class="card-tag warn">// up next (srs)</span>
+      <div id="dash-srs" style="margin-top:10px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SUBJECTS
+     ========================================================= -->
+<section class="section" id="sec-subj">
+  <div class="section-head">
+    <h2>subjects</h2>
+    <div class="meta" id="subj-count">0 enrolled</div>
+  </div>
+  <div class="row" style="margin-bottom:16px">
+    <select id="subj-picker" style="background:var(--bg);border:2px solid var(--ink);color:var(--ink);padding:8px 12px;font-family:var(--mono);font-size:12px;flex:1;max-width:400px"></select>
+    <button class="btn ghost" id="subj-add">+ add subject</button>
+    <button class="btn ghost" id="subj-remove">remove from profile</button>
+  </div>
+  <div id="subj-content"></div>
+</section>
+
+<!-- =========================================================
+     PAPERS
+     ========================================================= -->
+<section class="section" id="sec-papers">
+  <div class="section-head">
+    <h2>past papers</h2>
+    <div class="meta"><span class="badge-noai">real codes · external links</span></div>
+  </div>
+
+  <div class="paper-filters">
+    <span class="filt-lbl">subject</span>
+    <select id="pf-subj"></select>
+    <span class="filt-lbl">paper</span>
+    <select id="pf-paper"></select>
+    <span class="filt-lbl">year</span>
+    <select id="pf-year">
+      <option value="all">all</option>
+    </select>
+    <span class="filt-lbl">session</span>
+    <select id="pf-session">
+      <option value="all">all</option>
+      <option value="M/J">M/J</option>
+      <option value="O/N">O/N</option>
+      <option value="F/M">F/M</option>
+    </select>
+    <span class="filt-lbl">status</span>
+    <select id="pf-status">
+      <option value="all">all</option>
+      <option value="todo">not started</option>
+      <option value="attempted">attempted</option>
+      <option value="done">done</option>
+    </select>
+    <button class="btn xs ghost" id="pf-reset">reset</button>
+  </div>
+
+  <div id="papers-grid" class="paper-grid"></div>
+
+  <div class="spacer"></div>
+
+  <div class="card">
+    <span class="card-tag hot">// real past paper sources</span>
+    <p style="margin-top:8px;font-size:12px;color:var(--ink-dim)">External links open in a new tab. SIEGE does not host or redistribute past papers — it indexes the real CAIE/Edexcel paper codes and links to public mirrors.</p>
+    <div class="row" style="margin-top:12px">
+      <a href="https://papers.gceguide.com" target="_blank" class="btn ghost sm">gceguide.com →</a>
+      <a href="https://papacambridge.com" target="_blank" class="btn ghost sm">papacambridge.com →</a>
+      <a href="https://www.savemyexams.com" target="_blank" class="btn ghost sm">savemyexams.com →</a>
+      <a href="https://www.physicsandmathstutor.com" target="_blank" class="btn ghost sm">physicsandmathstutor →</a>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     AI
+     ========================================================= -->
+<section class="section" id="sec-ai">
+  <div class="section-head">
+    <h2>siege.ai</h2>
+    <div class="meta" id="ai-status">groq · standby</div>
+  </div>
+
+  <div class="wiz-strap">
+    <b>// the rules</b>
+    SIEGE does not invent past paper questions or fake paper codes. The AI's job is to find real past papers, explain questions you don't understand, walk through mark schemes, and plan your study. Always verify references against the linked sources.
+  </div>
+
+  <div class="ai-modes" id="ai-modes">
+    <div class="mode-card active" data-mode="plan">
+      <div class="mode-icon">▤</div>
+      <div class="mode-name">plan</div>
+      <div class="mode-desc">daily mission with real paper codes</div>
+    </div>
+    <div class="mode-card" data-mode="explain">
+      <div class="mode-icon">?</div>
+      <div class="mode-name">explain</div>
+      <div class="mode-desc">paste a question, get a breakdown</div>
+    </div>
+    <div class="mode-card" data-mode="markscheme">
+      <div class="mode-icon">⊟</div>
+      <div class="mode-name">mark scheme</div>
+      <div class="mode-desc">grade your answer like CAIE would</div>
+    </div>
+    <div class="mode-card" data-mode="weakness">
+      <div class="mode-icon">!</div>
+      <div class="mode-name">weakness audit</div>
+      <div class="mode-desc">find what to fix next</div>
+    </div>
+    <div class="mode-card" data-mode="recommender">
+      <div class="mode-icon">▸</div>
+      <div class="mode-name">recommender</div>
+      <div class="mode-desc">which paper should i attempt?</div>
+    </div>
+    <div class="mode-card" data-mode="concept">
+      <div class="mode-icon">◆</div>
+      <div class="mode-name">concept tutor</div>
+      <div class="mode-desc">explain a syllabus topic</div>
+    </div>
+    <div class="mode-card" data-mode="command">
+      <div class="mode-icon">⊳</div>
+      <div class="mode-name">command words</div>
+      <div class="mode-desc">drill describe/explain/justify</div>
+    </div>
+    <div class="mode-card" data-mode="socratic">
+      <div class="mode-icon">∴</div>
+      <div class="mode-name">socratic</div>
+      <div class="mode-desc">ai asks, you answer</div>
+    </div>
+  </div>
+
+  <div class="chat-box">
+    <div class="chat-head">
+      <div class="chat-head-title" id="chat-mode-label">// plan mode</div>
+      <div class="chat-head-status off" id="chat-status"><span class="dot"></span><span>standby</span></div>
+    </div>
+    <div class="chat-log" id="chat-log"></div>
+    <div class="chat-input-row">
+      <input class="chat-input" id="chat-input" placeholder="ask siege..." autocomplete="off">
+      <button class="chat-send" id="chat-send">SEND</button>
+    </div>
+  </div>
+  <div class="quick-prompts" id="quick-prompts"></div>
+</section>
+
+<!-- =========================================================
+     POMODORO
+     ========================================================= -->
+<section class="section" id="sec-pomo">
+  <div class="section-head">
+    <h2>pomodoro</h2>
+    <div class="meta">focus timer · logs to subject</div>
+  </div>
+
+  <div class="grid-2">
+    <div class="pomo-wrap">
+      <div class="pomo-label">timer</div>
+      <div class="pomo-mode" id="pomo-mode">focus</div>
+      <div class="pomo-time" id="pomo-time">25:00</div>
+      <div class="pomo-ctrl">
+        <button class="btn hot" id="pomo-start">[ start ]</button>
+        <button class="btn ghost" id="pomo-pause" disabled>pause</button>
+        <button class="btn ghost" id="pomo-reset">reset</button>
+      </div>
+      <div class="pomo-subj">subject: <b id="pomo-subj-label">—</b></div>
+    </div>
+
+    <div class="card">
+      <span class="card-tag">// session config</span>
+      <div class="field" style="margin-top:10px">
+        <label>subject</label>
+        <select id="pomo-subj"></select>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>focus (min)</label><input type="number" id="pomo-focus" value="25" min="5" max="120"></div>
+        <div class="field"><label>break (min)</label><input type="number" id="pomo-break" value="5" min="1" max="30"></div>
+      </div>
+      <button class="btn ghost full" id="pomo-cfg-save">save</button>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="card">
+    <span class="card-tag">// today's logged time</span>
+    <div id="pomo-log" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<!-- =========================================================
+     STATS
+     ========================================================= -->
+<section class="section" id="sec-stats">
+  <div class="section-head">
+    <h2>stats</h2>
+    <div class="meta" id="stats-meta">all-time</div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <span class="card-tag hot">// weekly study time</span>
+      <div class="chart-box"><canvas id="chart-time" width="600" height="220"></canvas></div>
+    </div>
+    <div class="card">
+      <span class="card-tag cy">// score trend</span>
+      <div class="chart-box"><canvas id="chart-scores" width="600" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="card">
+    <span class="card-tag warn">// streak calendar (last 52 weeks)</span>
+    <div id="heatmap" class="heatmap"></div>
+    <div class="heatmap-legend"><span>less</span><span class="sq" data-lvl="0"></span><span class="sq" data-lvl="1"></span><span class="sq" data-lvl="2"></span><span class="sq" data-lvl="3"></span><span class="sq" data-lvl="4"></span><span>more</span></div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="card">
+    <span class="card-tag">// topic mastery heatmap (per subject)</span>
+    <div id="mastery-map" style="margin-top:14px"></div>
+  </div>
+</section>
+
+<!-- =========================================================
+     MISTAKES
+     ========================================================= -->
+<section class="section" id="sec-mistakes">
+  <div class="section-head">
+    <h2>mistake log</h2>
+    <div class="meta">questions you got wrong</div>
+  </div>
+  <div class="row" style="margin-bottom:14px">
+    <button class="btn hot" id="mistake-add">+ log a mistake</button>
+    <select id="mistake-filter" style="background:var(--bg);border:1px solid var(--dim);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px"><option value="all">all subjects</option></select>
+  </div>
+  <div id="mistakes-list"></div>
+</section>
+
+<!-- =========================================================
+     NOTES
+     ========================================================= -->
+<section class="section" id="sec-notes">
+  <div class="section-head">
+    <h2>notes vault</h2>
+    <div class="meta">markdown · per topic</div>
+  </div>
+  <div class="row" style="margin-bottom:10px">
+    <select id="notes-subj" style="background:var(--bg);border:1px solid var(--dim);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px"></select>
+  </div>
+  <div class="notes-grid">
+    <div class="notes-side" id="notes-side"></div>
+    <div class="notes-edit">
+      <textarea id="notes-edit" placeholder="select a topic on the left to start taking notes..."></textarea>
+      <div class="notes-edit-foot">
+        <span id="notes-status">no topic selected</span>
+        <span class="muted">auto-saved</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     FLASHCARDS
+     ========================================================= -->
+<section class="section" id="sec-flash">
+  <div class="section-head">
+    <h2>flashcards</h2>
+    <div class="meta">manual · spaced review</div>
+  </div>
+  <div class="row" style="margin-bottom:14px">
+    <select id="flash-subj" style="background:var(--bg);border:1px solid var(--dim);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px"></select>
+    <button class="btn ghost" id="flash-add">+ new card</button>
+    <button class="btn ghost" id="flash-review">review queue</button>
+    <button class="btn ghost" id="flash-all">browse all</button>
+  </div>
+  <div id="flash-content"></div>
+</section>
+
+<!-- =========================================================
+     SETTINGS
+     ========================================================= -->
+<section class="section" id="sec-cfg">
+  <div class="section-head">
+    <h2>settings</h2>
+    <div class="meta">profile · ai · data</div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <span class="card-tag hot">// groq api</span>
+      <div class="field" style="margin-top:10px">
+        <label>api key</label>
+        <input type="password" id="cfg-key" placeholder="gsk_...">
+        <div class="field-hint">stored locally only. get one free at <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a></div>
+      </div>
+      <div class="field">
+        <label>model</label>
+        <select id="cfg-model">
+          <option value="openai/gpt-oss-120b" selected>gpt-oss-120b (strongest)</option>
+          <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (balanced)</option>
+          <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (fastest)</option>
+          <option value="qwen/qwen3-32b">qwen3-32b</option>
+          <option value="meta-llama/llama-4-scout-17b-16e-instruct">llama-4-scout (preview)</option>
+        </select>
+      </div>
+      <button class="btn hot" id="cfg-save">save & test</button>
+    </div>
+
+    <div class="card">
+      <span class="card-tag">// schedule</span>
+      <div class="field" style="margin-top:10px">
+        <label>finish-by deadline</label>
+        <input type="date" id="cfg-deadline">
+      </div>
+      <div class="field">
+        <label>exam date</label>
+        <input type="date" id="cfg-exam">
+      </div>
+      <div class="field">
+        <label>daily study budget (hours)</label>
+        <input type="number" id="cfg-hours" min="1" max="12" step="0.5" value="4">
+      </div>
+      <button class="btn" id="cfg-save-sched">save</button>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="grid-2">
+    <div class="card">
+      <span class="card-tag cy">// profile</span>
+      <div class="field" style="margin-top:10px">
+        <label>name</label>
+        <input type="text" id="cfg-name" placeholder="operator">
+      </div>
+      <div class="field">
+        <label>avatar (1 char)</label>
+        <input type="text" id="cfg-avatar" maxlength="2">
+      </div>
+      <div class="row">
+        <button class="btn" id="cfg-profile-save">save</button>
+        <button class="btn ghost" id="cfg-profile-new">+ new profile</button>
+        <button class="btn danger" id="cfg-profile-del">delete profile</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="card-tag">// appearance</span>
+      <div class="field" style="margin-top:10px">
+        <label>theme</label>
+        <div class="seg" id="theme-seg">
+          <button data-theme="red" class="on">brutalist red</button>
+          <button data-theme="green">terminal green</button>
+          <button data-theme="mono">mono white</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>direction</label>
+        <div class="seg" id="dir-seg">
+          <button data-dir="ltr" class="on">ltr (english)</button>
+          <button data-dir="rtl">rtl (arabic)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="grid-2">
+    <div class="card">
+      <span class="card-tag warn">// license</span>
+      <div class="field" style="margin-top:10px">
+        <label>license key</label>
+        <input type="text" id="cfg-license" placeholder="enter key from gumroad">
+        <div class="field-hint" id="cfg-license-status">unlicensed (offline mode unrestricted)</div>
+      </div>
+      <button class="btn ghost" id="cfg-license-save">apply</button>
+    </div>
+
+    <div class="card">
+      <span class="card-tag">// data</span>
+      <p style="font-size:11px;color:var(--ink-dim);margin-top:6px;margin-bottom:14px">export your data as encrypted JSON (password-protected) or plain JSON.</p>
+      <div class="row">
+        <button class="btn ghost" id="data-export">export (plain)</button>
+        <button class="btn ghost" id="data-export-enc">export (encrypted)</button>
+        <button class="btn ghost" id="data-import">import</button>
+        <input type="file" id="data-file" accept=".json" style="display:none">
+        <button class="btn danger" id="data-clear">wipe profile</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="card">
+    <span class="card-tag">// system prompt (advanced)</span>
+    <p style="font-size:11px;color:var(--ink-dim);margin-top:6px;margin-bottom:8px">Custom instructions appended to siege.ai's system prompt for this profile. Leave blank for default.</p>
+    <div class="field">
+      <textarea id="cfg-sysprompt" placeholder="e.g. always reply in casual lowercase. focus extra hard on chem stoichiometry."></textarea>
+    </div>
+    <button class="btn" id="cfg-sysprompt-save">save</button>
+  </div>
+</section>
+
+<!-- =========================================================
+     HELP
+     ========================================================= -->
+<section class="section" id="sec-help">
+  <div class="section-head">
+    <h2>help</h2>
+    <div class="meta">docs · faq · shortcuts</div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>quick start</h3>
+      <ol style="margin-left:18px;font-size:12px;color:var(--ink-dim);line-height:1.8">
+        <li>open settings → paste your groq api key (free at console.groq.com/keys)</li>
+        <li>go to subjects → enable the syllabus topics you've covered</li>
+        <li>go to dashboard → hit [generate today's mission]</li>
+        <li>open past papers → attempt the recommended paper using the gceguide link</li>
+        <li>log your score & wrong questions → siege ai builds your weakness map</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3>keyboard shortcuts</h3>
+      <table style="width:100%;font-size:12px;color:var(--ink-dim)">
+        <tr><td><code>⌘K</code> / <code>Ctrl+K</code></td><td>command palette</td></tr>
+        <tr><td><code>g d</code></td><td>dashboard</td></tr>
+        <tr><td><code>g a</code></td><td>ai</td></tr>
+        <tr><td><code>g p</code></td><td>papers</td></tr>
+        <tr><td><code>g s</code></td><td>stats</td></tr>
+        <tr><td><code>g f</code></td><td>flashcards</td></tr>
+        <tr><td><code>g n</code></td><td>notes</td></tr>
+        <tr><td><code>n m</code></td><td>new mission</td></tr>
+        <tr><td><code>?</code></td><td>help</td></tr>
+        <tr><td><code>Esc</code></td><td>close modal</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="card">
+    <h3>frequently asked</h3>
+    <p><b style="color:var(--accent)">Does SIEGE generate practice questions with AI?</b><br>
+    No. This is the core principle. AI-generated questions are unreliable and don't match real CAIE mark schemes. SIEGE only references real past papers (with real paper codes like <code>0620/42/O/N/22</code>) and links to public mirrors like gceguide.com.</p>
+    <div class="divider-thin"></div>
+    <p><b style="color:var(--accent)">Where is my data stored?</b><br>
+    Entirely in your browser's localStorage. Nothing is sent to any server except your Groq API calls (which only contain the chat messages you send). You can export everything as JSON, encrypted or plain.</p>
+    <div class="divider-thin"></div>
+    <p><b style="color:var(--accent)">Can I add subjects not in the catalog?</b><br>
+    Yes — see CUSTOMIZATION.md. The syllabus is editable JSON in the source. Add your own topics, paper structure, and codes.</p>
+    <div class="divider-thin"></div>
+    <p><b style="color:var(--accent)">Why brutalist?</b><br>
+    Because every other study app looks the same. SIEGE makes opening it feel different — like a command terminal, not another Notion clone. The aesthetic is part of the discipline.</p>
+    <div class="divider-thin"></div>
+    <p><b style="color:var(--accent)">Which Groq model should I use?</b><br>
+    Default <code>gpt-oss-120b</code> is best for reasoning (explanations, mark scheme grading). Switch to <code>llama-3.1-8b-instant</code> if you want sub-second responses for the daily plan.</p>
+    <div class="divider-thin"></div>
+    <p><b style="color:var(--accent)">Does it work offline?</b><br>
+    Mostly. Mission generation has a rule-based fallback. AI chat needs internet + Groq key. Everything else (topics, papers, notes, pomodoro, stats) works offline.</p>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="card">
+    <h3>past paper sources</h3>
+    <p>SIEGE indexes paper codes and provides external links. We do not host the papers. Use any of these mirrors:</p>
+    <ul style="margin-left:20px;font-size:12px;line-height:1.8">
+      <li><a href="https://papers.gceguide.com" target="_blank">gceguide.com</a> — primary, most reliable for CAIE</li>
+      <li><a href="https://papacambridge.com" target="_blank">papacambridge.com</a> — alternative CAIE mirror</li>
+      <li><a href="https://www.savemyexams.com" target="_blank">savemyexams.com</a> — by-question + topic questions</li>
+      <li><a href="https://www.physicsandmathstutor.com" target="_blank">physicsandmathstutor.com</a> — better for Edexcel</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+</div>
+
+<!-- modal -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal" id="modal">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- command palette -->
+<div class="cmd-bg" id="cmd-bg">
+  <div class="cmd">
+    <input id="cmd-input" placeholder="type a command... (jump to dashboard, generate mission, log paper, etc)">
+    <div class="cmd-results" id="cmd-results"></div>
+  </div>
+</div>
+
+<!-- toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ============================================================
+     ONBOARDING WIZARD
+     ============================================================ -->
+<div class="wiz-bg" id="wiz-bg">
+  <div class="wiz-head">
+    <div class="wh-brand">
+      <div class="sb-mark">S</div>
+      <div>
+        <div class="sb-name">siege</div>
+        <div class="sb-sub">study terminal · setup</div>
+      </div>
+    </div>
+    <div class="wh-step">step <b id="wiz-step">1</b> / 8</div>
+  </div>
+  <div class="wiz-prog"><div class="wiz-prog-bar" id="wiz-prog-bar" style="width:12.5%"></div></div>
+  <div class="wiz-body">
+    <div class="wiz-card" id="wiz-card"></div>
+  </div>
+  <div class="wiz-foot">
+    <button class="btn ghost" id="wiz-back">← back</button>
+    <div class="row">
+      <button class="btn ghost" id="wiz-skip">skip</button>
+      <button class="btn hot" id="wiz-next">next →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SYLLABI DATA — real IGCSE syllabus topics, paper structures
+// CAIE + Edexcel coverage.
+// ============================================================
+
+const SYLLABI = {
+  // === CIE SCIENCES ===
+  '0620': {
+    code: '0620', name: 'Chemistry', board: 'CAIE', tier: 'Extended',
+    paperStruct: [
+      {num:'2', name:'MCQ (extended)', marks:40, time:45},
+      {num:'4', name:'Theory (extended)', marks:80, time:105},
+      {num:'6', name:'Alternative to Practical', marks:40, time:60}
+    ],
+    topics: [
+      'States of matter','Atoms, elements & compounds','Stoichiometry','Electrochemistry',
+      'Chemical energetics','Chemical reactions (rates, reversible, redox)','Acids, bases & salts',
+      'The Periodic Table','Metals','Chemistry of the environment','Organic chemistry',
+      'Experimental techniques & analysis'
+    ],
+    color: 'chem'
+  },
+  '0610': {
+    code: '0610', name: 'Biology', board: 'CAIE', tier: 'Extended',
+    paperStruct: [
+      {num:'2', name:'MCQ (extended)', marks:40, time:45},
+      {num:'4', name:'Theory (extended)', marks:80, time:75},
+      {num:'6', name:'Alternative to Practical', marks:40, time:60}
+    ],
+    topics: [
+      'Characteristics & classification of living organisms','Organisation of the organism',
+      'Movement into and out of cells','Biological molecules','Enzymes','Plant nutrition',
+      'Human nutrition','Transport in plants','Transport in animals','Diseases & immunity',
+      'Gas exchange in humans','Respiration','Excretion in humans','Coordination & response',
+      'Drugs','Reproduction','Inheritance','Variation & selection','Organisms & their environment',
+      'Human influences on ecosystems','Biotechnology & genetic modification'
+    ],
+    color: 'bio'
+  },
+  '0625': {
+    code: '0625', name: 'Physics', board: 'CAIE', tier: 'Extended',
+    paperStruct: [
+      {num:'2', name:'MCQ (extended)', marks:40, time:45},
+      {num:'4', name:'Theory (extended)', marks:80, time:75},
+      {num:'6', name:'Alternative to Practical', marks:40, time:60}
+    ],
+    topics: [
+      'Motion, forces & energy','Thermal physics','Waves','Electricity & magnetism',
+      'Nuclear physics','Space physics'
+    ],
+    color: 'phys'
+  },
+  '0654': {
+    code: '0654', name: 'Coordinated Sciences', board: 'CAIE', tier: 'Extended',
+    paperStruct: [
+      {num:'2', name:'MCQ', marks:40, time:45},
+      {num:'4', name:'Theory', marks:120, time:120},
+      {num:'6', name:'Alternative to Practical', marks:60, time:90}
+    ],
+    topics: [
+      'Bio: Cells & organisation','Bio: Transport & gas exchange','Bio: Reproduction & inheritance',
+      'Bio: Ecology & environment','Chem: Atomic structure','Chem: Stoichiometry & reactions',
+      'Chem: Acids & periodic table','Chem: Organic chemistry','Phys: Motion & forces',
+      'Phys: Energy & thermal','Phys: Waves','Phys: Electricity & magnetism'
+    ],
+    color: 'chem'
+  },
+
+  // === CIE MATHS ===
+  '0580': {
+    code: '0580', name: 'Mathematics', board: 'CAIE', tier: 'Extended',
+    paperStruct: [
+      {num:'2', name:'Core (non-calc)', marks:80, time:90},
+      {num:'4', name:'Extended (calc)', marks:130, time:150}
+    ],
+    topics: [
+      'Number','Algebra & graphs','Coordinate geometry','Geometry','Mensuration',
+      'Trigonometry','Transformations & vectors','Probability','Statistics'
+    ],
+    color: 'math'
+  },
+  '0606': {
+    code: '0606', name: 'Additional Mathematics', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'Paper 1', marks:80, time:120},
+      {num:'2', name:'Paper 2', marks:80, time:120}
+    ],
+    topics: [
+      'Functions','Quadratic functions','Equations, inequalities, graphs','Indices & surds',
+      'Factors of polynomials','Simultaneous equations','Logarithmic & exponential functions',
+      'Straight line graphs','Coordinate geometry of the circle','Circular measure',
+      'Trigonometry','Permutations & combinations','Series','Vectors in two dimensions',
+      'Differentiation & integration','Kinematics'
+    ],
+    color: 'math'
+  },
+  '0607': {
+    code: '0607', name: 'International Mathematics', board: 'CAIE',
+    paperStruct: [
+      {num:'2', name:'Paper 2', marks:40, time:45},
+      {num:'4', name:'Paper 4', marks:120, time:135},
+      {num:'6', name:'Investigation/Modelling', marks:40, time:75}
+    ],
+    topics: [
+      'Number','Algebra','Functions','Coordinate geometry','Geometry',
+      'Mensuration','Trigonometry','Sets','Probability','Statistics'
+    ],
+    color: 'math'
+  },
+
+  // === CIE LANGUAGES ===
+  '0500': {
+    code: '0500', name: 'English First Language', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'Reading', marks:80, time:120},
+      {num:'2', name:'Directed Writing & Composition', marks:80, time:120}
+    ],
+    topics: [
+      'Reading: comprehension (short-answer Q1a-d)','Reading: writer\'s effects (Q2)',
+      'Reading: summary writing (Q3)','Writing: directed (article/letter/speech/report)',
+      'Writing: narrative composition','Writing: descriptive composition',
+      'Vocabulary precision & range','Grammar, punctuation & spelling polish',
+      'Tone, register & audience','Structure & paragraphing'
+    ],
+    color: 'eng'
+  },
+  '0510': {
+    code: '0510', name: 'English as a Second Language', board: 'CAIE',
+    paperStruct: [
+      {num:'2', name:'Reading & Writing', marks:80, time:120},
+      {num:'1', name:'Listening', marks:40, time:50},
+      {num:'5', name:'Speaking', marks:40, time:12}
+    ],
+    topics: [
+      'Reading: short text comprehension','Reading: gap-fill','Reading: matching',
+      'Reading: long text comprehension','Writing: email/letter (Q5)',
+      'Writing: report/article/review (Q6)','Listening: short extracts',
+      'Listening: long extracts & note-taking','Speaking: warm-up & topic',
+      'Vocabulary range & accuracy','Grammar accuracy','Discourse markers'
+    ],
+    color: 'eng'
+  },
+  '0508': {
+    code: '0508', name: 'Arabic First Language', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'Reading & Comprehension', marks:50, time:120},
+      {num:'2', name:'Writing', marks:50, time:120}
+    ],
+    topics: [
+      'النصوص النثرية (prose comprehension)','النصوص الشعرية (poetry analysis)',
+      'القواعد النحوية (grammar rules)','الإعراب (parsing)','البلاغة (rhetoric)',
+      'الإملاء (spelling/dictation)','التلخيص (summarising)',
+      'الكتابة الإبداعية (creative writing)','كتابة المقال (essay writing)',
+      'الكتابة الوظيفية (functional writing)'
+    ],
+    color: 'ar'
+  },
+  '0544': {
+    code: '0544', name: 'Arabic as a Foreign Language', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'Listening', marks:40, time:45},
+      {num:'2', name:'Reading & Writing', marks:80, time:105},
+      {num:'3', name:'Speaking', marks:40, time:15}
+    ],
+    topics: [
+      'Reading: short texts','Reading: long passages','Writing: short messages',
+      'Writing: extended essay','Listening: dialogues','Listening: monologues',
+      'Speaking: presentation','Speaking: conversation','Vocabulary themes',
+      'Grammar: verbs & tenses','Grammar: nouns & adjectives'
+    ],
+    color: 'ar'
+  },
+  '0520': {
+    code: '0520', name: 'French as a Foreign Language', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'Listening', marks:40, time:45},
+      {num:'2', name:'Reading & Writing', marks:65, time:90},
+      {num:'3', name:'Speaking', marks:40, time:12}
+    ],
+    topics: [
+      'Reading: short texts','Reading: extended passages','Writing: messages & forms',
+      'Writing: essay (130-140 words)','Listening: short items','Listening: extended',
+      'Speaking: presentation','Speaking: role-play','Vocabulary: family/school/leisure',
+      'Vocabulary: travel/work/environment','Grammar: tenses','Grammar: pronouns'
+    ],
+    color: 'eng'
+  },
+
+  // === CIE LIT/HUM ===
+  '0475': {
+    code: '0475', name: 'English Literature', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'Poetry & Prose', marks:50, time:90},
+      {num:'2', name:'Drama', marks:25, time:45},
+      {num:'3', name:'Coursework', marks:50, time:0}
+    ],
+    topics: [
+      'Poetry: close reading','Poetry: comparative analysis','Prose: set text passage',
+      'Prose: essay on whole text','Drama: set play passage','Drama: essay',
+      'Critical vocabulary','Quotation & evidence use','Themes & contexts',
+      'Author technique analysis'
+    ],
+    color: 'lit'
+  },
+  '0470': {
+    code: '0470', name: 'History', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'Core/Depth Studies', marks:60, time:120},
+      {num:'2', name:'Source-based', marks:50, time:120},
+      {num:'4', name:'Alternative to Coursework', marks:40, time:60}
+    ],
+    topics: [
+      'Core: Were the Peace Treaties of 1919-23 fair?','Core: League of Nations',
+      'Core: Hitler\'s foreign policy & WW2 outbreak','Core: Cold War origins',
+      'Core: Vietnam War','Depth: Germany 1918-45','Depth: Russia 1905-41',
+      'Depth: USA 1919-41','Source analysis skills','Essay structure & argument'
+    ],
+    color: 'hum'
+  },
+  '0460': {
+    code: '0460', name: 'Geography', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'Geographical Themes', marks:75, time:105},
+      {num:'2', name:'Geographical Skills', marks:60, time:90},
+      {num:'4', name:'Alternative to Coursework', marks:60, time:90}
+    ],
+    topics: [
+      'Population & settlement','Migration','Urban environments','The natural environment',
+      'Earthquakes & volcanoes','Rivers & coasts','Weather & climate','Ecosystems',
+      'Economic development','Food production','Industry','Tourism','Energy',
+      'Water','Environmental risks','Map skills','Graph interpretation'
+    ],
+    color: 'hum'
+  },
+
+  // === CIE BUSINESS ===
+  '0450': {
+    code: '0450', name: 'Business Studies', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'Short answer & data response', marks:80, time:90},
+      {num:'2', name:'Case study', marks:80, time:90}
+    ],
+    topics: [
+      'Understanding business activity','People in business','Marketing',
+      'Operations management','Financial information & decisions','External influences on business'
+    ],
+    color: 'biz'
+  },
+  '0455': {
+    code: '0455', name: 'Economics', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'MCQ', marks:30, time:45},
+      {num:'2', name:'Structured questions', marks:90, time:135}
+    ],
+    topics: [
+      'The basic economic problem','The allocation of resources','Microeconomic decision-makers',
+      'Government & the macroeconomy','Economic development','International trade & globalisation'
+    ],
+    color: 'biz'
+  },
+  '0452': {
+    code: '0452', name: 'Accounting', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'Paper 1', marks:120, time:105},
+      {num:'2', name:'Paper 2', marks:120, time:105}
+    ],
+    topics: [
+      'The fundamentals of accounting','Sources & recording of data','Verification of accounting records',
+      'Accounting procedures','Preparation of financial statements','Analysis & interpretation',
+      'Accounting principles & policies'
+    ],
+    color: 'biz'
+  },
+
+  // === CIE COMPUTING ===
+  '0478': {
+    code: '0478', name: 'Computer Science', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'Computer Systems', marks:75, time:105},
+      {num:'2', name:'Algorithms, Programming & Logic', marks:75, time:105}
+    ],
+    topics: [
+      'Data representation (binary, hex, text, images, sound, compression)',
+      'Data transmission','Hardware (CPU, memory, I/O, secondary storage)',
+      'Software (system & application, programming languages)','The internet & its uses',
+      'Automated & emerging technologies','Algorithm design & problem-solving',
+      'Programming (sequence, selection, iteration, arrays)','Databases (SQL)',
+      'Boolean logic (truth tables, logic gates)'
+    ],
+    color: 'comp'
+  },
+  '0417': {
+    code: '0417', name: 'ICT', board: 'CAIE',
+    paperStruct: [
+      {num:'1', name:'Theory', marks:80, time:90},
+      {num:'2', name:'Document Production, Databases & Presentations', marks:80, time:150},
+      {num:'3', name:'Spreadsheets & Website Authoring', marks:80, time:150}
+    ],
+    topics: [
+      'Types & components of computer systems','Input & output devices','Storage devices & media',
+      'Networks','Effects of using IT','ICT applications','System life cycle',
+      'Safety & security','Audience','Communication','File management','Images',
+      'Layout','Styles','Proofing','Graphs & charts','Document production',
+      'Databases','Presentations','Spreadsheets','Website authoring'
+    ],
+    color: 'comp'
+  },
+
+  // === EDEXCEL ===
+  '4CH1': {
+    code: '4CH1', name: 'Chemistry', board: 'Edexcel',
+    paperStruct: [
+      {num:'1C', name:'Paper 1C', marks:110, time:120},
+      {num:'2C', name:'Paper 2C', marks:70, time:75}
+    ],
+    topics: [
+      'Principles of chemistry','Inorganic chemistry','Physical chemistry','Organic chemistry'
+    ],
+    color: 'chem'
+  },
+  '4BI1': {
+    code: '4BI1', name: 'Biology', board: 'Edexcel',
+    paperStruct: [
+      {num:'1B', name:'Paper 1B', marks:110, time:120},
+      {num:'2B', name:'Paper 2B', marks:70, time:75}
+    ],
+    topics: [
+      'The nature & variety of living organisms','Structures & functions in living organisms',
+      'Reproduction & inheritance','Ecology & the environment','Use of biological resources'
+    ],
+    color: 'bio'
+  },
+  '4PH1': {
+    code: '4PH1', name: 'Physics', board: 'Edexcel',
+    paperStruct: [
+      {num:'1P', name:'Paper 1P', marks:110, time:120},
+      {num:'2P', name:'Paper 2P', marks:70, time:75}
+    ],
+    topics: [
+      'Forces & motion','Electricity','Waves','Energy resources & transfer',
+      'Solids, liquids & gases','Magnetism & electromagnetism','Radioactivity & particles',
+      'Astrophysics'
+    ],
+    color: 'phys'
+  },
+  '4MA1': {
+    code: '4MA1', name: 'Mathematics A', board: 'Edexcel',
+    paperStruct: [
+      {num:'1H', name:'Paper 1H (Higher)', marks:100, time:120},
+      {num:'2H', name:'Paper 2H (Higher)', marks:100, time:120}
+    ],
+    topics: [
+      'Number','Algebra','Geometry','Statistics','Probability'
+    ],
+    color: 'math'
+  }
+};
+
+// Order subjects by board then code for display
+const SUBJECT_ORDER = [
+  '0620','0610','0625','0654','0580','0606','0607','0500','0510','0508','0544','0520',
+  '0475','0470','0460','0450','0455','0452','0478','0417',
+  '4CH1','4BI1','4PH1','4MA1'
+];
+
+const BOARDS = ['CAIE','Edexcel','Oxford AQA','AQA International'];
+const SESSIONS = ['M/J','O/N','F/M'];
+const YEARS = [2024,2023,2022,2021,2020,2019,2018];
+const VARIANTS = ['1','2','3'];
+
+// link patterns
+function gceGuideLink(subj, paperNum, variant, session, year, type='qp'){
+  if(subj.board !== 'CAIE') return null;
+  const sLetter = {'M/J':'s','O/N':'w','F/M':'m'}[session];
+  const yy = String(year).slice(-2);
+  const subjPath = encodeURIComponent(`${subj.name} (${subj.code})`);
+  const fname = `${subj.code}_${sLetter}${yy}_${type}_${paperNum}${variant}.pdf`;
+  return `https://papers.gceguide.com/IGCSE/${subjPath}/${year}/${fname}`;
+}
+function papaCambridgeLink(subj){
+  if(subj.board !== 'CAIE') return null;
+  return `https://papacambridge.com/papers/caie/index.php?dirpath=/Cambridge%20IGCSE/${encodeURIComponent(subj.name)}%20(${subj.code})/`;
+}
+function smeLink(subj){
+  const slug = subj.name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z-]/g,'');
+  return `https://www.savemyexams.com/igcse/${slug}/`;
+}
+
+
+// ============================================================
+// STATE MANAGEMENT
+// localStorage namespaced per profile.
+// Top-level shape: { version, currentProfile, profiles: { id: {...} } }
+// ============================================================
+
+const STORE_KEY = 'siege:v1';
+const VERSION = '1.0.0';
+
+function defaultProfile(name='operator', avatar='O'){
+  return {
+    id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    name, avatar,
+    created: nowIso(),
+    onboarded: false,
+    board: 'CAIE',
+    examSession: 'O/N 2026',
+    deadline: '2026-09-30',
+    examDate: '2026-11-01',
+    dailyHours: 4,
+    apiKey: '',
+    model: 'openai/gpt-oss-120b',
+    license: '',
+    theme: 'red',
+    dir: 'ltr',
+    sysPromptExtra: '',
+    subjects: {},   // code -> { topicProgress:{}, papers:[], papersAttempted:{}, notes:{}, mistakes:[], flashcards:[] }
+    subjectStrength: {}, // code -> 'weak'|'medium'|'strong'
+    mission: { date:'', tasks:[], done:[] },
+    streak: { count:0, lastDay:'', freezesUsed:0, freezeWeek:'' },
+    studyLog: [],  // [{date, subj, mins, source}]
+    pomoCfg: { focus:25, break:5, subj:'' },
+    chatByMode: { plan:[], explain:[], markscheme:[], weakness:[], recommender:[], concept:[], command:[], socratic:[] },
+    achievements: []
+  };
+}
+
+function defaultStore(){
+  const p = defaultProfile();
+  return {
+    version: VERSION,
+    currentProfile: p.id,
+    profiles: { [p.id]: p }
+  };
+}
+
+let STORE;
+
+function loadStore(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw){ STORE = defaultStore(); save(); return; }
+    const parsed = JSON.parse(raw);
+    // migrate / fill defaults
+    STORE = { ...defaultStore(), ...parsed };
+    if(!STORE.profiles || Object.keys(STORE.profiles).length === 0){
+      const p = defaultProfile();
+      STORE.profiles = { [p.id]: p };
+      STORE.currentProfile = p.id;
+    }
+    if(!STORE.profiles[STORE.currentProfile]){
+      STORE.currentProfile = Object.keys(STORE.profiles)[0];
+    }
+    // fill profile defaults
+    Object.values(STORE.profiles).forEach(p => {
+      const d = defaultProfile();
+      for(const k of Object.keys(d)){
+        if(p[k] === undefined) p[k] = d[k];
+      }
+      // ensure chat modes
+      const cd = d.chatByMode;
+      for(const m of Object.keys(cd)){
+        if(!p.chatByMode[m]) p.chatByMode[m] = [];
+      }
+    });
+  } catch(e){
+    console.error('store load failed', e);
+    STORE = defaultStore();
+    save();
+  }
+}
+
+function save(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(STORE)); }
+  catch(e){ console.error('save failed', e); }
+}
+
+function P(){ return STORE.profiles[STORE.currentProfile]; }
+
+function switchProfile(id){
+  if(!STORE.profiles[id]) return;
+  STORE.currentProfile = id;
+  save();
+  bootRender();
+  toast('switched to ' + P().name);
+}
+
+function newProfile(name, avatar){
+  const p = defaultProfile(name, avatar || (name[0]||'O').toUpperCase());
+  STORE.profiles[p.id] = p;
+  STORE.currentProfile = p.id;
+  save();
+  bootRender();
+  return p;
+}
+
+function deleteProfile(id){
+  if(Object.keys(STORE.profiles).length <= 1){
+    toast('cannot delete only profile');
+    return false;
+  }
+  delete STORE.profiles[id];
+  if(STORE.currentProfile === id){
+    STORE.currentProfile = Object.keys(STORE.profiles)[0];
+  }
+  save();
+  bootRender();
+  return true;
+}
+
+// helper for subject state per profile
+function getSubjState(code){
+  const p = P();
+  if(!p.subjects[code]){
+    p.subjects[code] = {
+      topicProgress: {},
+      papers: [],
+      papersAttempted: {}, // paperKey -> 'attempted'|'done'
+      notes: {},
+      mistakes: [],
+      flashcards: []
+    };
+  }
+  return p.subjects[code];
+}
+
+function enrolledSubjects(){
+  const p = P();
+  return Object.keys(p.subjects).filter(c => SYLLABI[c]);
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function $(sel, root=document){ return root.querySelector(sel); }
+function $$(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
+
+function el(tag, attrs={}, html=''){
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k,v])=>{
+    if(k==='class') e.className = v;
+    else if(k.startsWith('on') && typeof v==='function') e.addEventListener(k.slice(2),v);
+    else if(v !== null && v !== undefined) e.setAttribute(k,v);
+  });
+  if(html !== '' && html !== null && html !== undefined) e.innerHTML = html;
+  return e;
+}
+
+function nowIso(){ return new Date().toISOString(); }
+function todayIso(){ return new Date().toISOString().slice(0,10); }
+function pad2(n){ return n<10 ? '0'+n : ''+n; }
+function clamp(n,lo,hi){ return Math.max(lo, Math.min(hi, n)); }
+function daysBetween(a, b){
+  const ms = new Date(b) - new Date(a);
+  return Math.ceil(ms / 86400000);
+}
+function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtMins(m){
+  if(m<60) return m + ' min';
+  return Math.floor(m/60) + 'h ' + (m%60) + 'm';
+}
+function dayKey(d){
+  if(typeof d === 'string') return d.slice(0,10);
+  return d.toISOString().slice(0,10);
+}
+function weekKey(d){
+  const date = new Date(d);
+  date.setHours(0,0,0,0);
+  // ISO week
+  date.setDate(date.getDate() + 4 - (date.getDay()||7));
+  const yearStart = new Date(date.getFullYear(),0,1);
+  const wn = Math.ceil((((date - yearStart)/86400000)+1)/7);
+  return date.getFullYear()+'-W'+pad2(wn);
+}
+
+function rng(seed){
+  let t = seed >>> 0;
+  return function(){
+    t |= 0; t = t + 0x6D2B79F5 | 0;
+    let r = Math.imul(t ^ t >>> 15, 1 | t);
+    r = r + Math.imul(r ^ r >>> 7, 61 | r) ^ r;
+    return ((r ^ r >>> 14) >>> 0) / 4294967296;
+  };
+}
+function pick(arr, r){ return arr[Math.floor(r() * arr.length)]; }
+function dateSeed(d){ return parseInt(d.replace(/-/g,''),10) || 1; }
+
+// debounce
+function debounce(fn, ms=300){
+  let t; return function(...a){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,a), ms); };
+}
+
+// toast
+function toast(msg, ms=2400, bad=false){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.toggle('bad', bad);
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove('show'), ms);
+}
+
+
+// ============================================================
+// THEME & DIRECTION
+// ============================================================
+function applyTheme(theme){
+  document.body.dataset.theme = theme;
+  P().theme = theme;
+  $$('#theme-seg button').forEach(b => b.classList.toggle('on', b.dataset.theme === theme));
+  save();
+}
+function applyDir(dir){
+  document.documentElement.dir = dir;
+  P().dir = dir;
+  $$('#dir-seg button').forEach(b => b.classList.toggle('on', b.dataset.dir === dir));
+  save();
+}
+
+// ============================================================
+// NAV
+// ============================================================
+function go(tab){
+  $$('.sb-item').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  $$('.section').forEach(s => s.classList.toggle('active', s.id === 'sec-'+tab));
+  if(window.innerWidth <= 900){
+    $('#sidebar').classList.remove('open');
+    $('#sb-backdrop').classList.remove('show');
+  }
+  // section-specific renders
+  if(tab === 'subj') renderSubjects();
+  if(tab === 'papers') renderPaperLibrary();
+  if(tab === 'ai') renderAI();
+  if(tab === 'stats') renderStatsCharts();
+  if(tab === 'mistakes') renderMistakes();
+  if(tab === 'notes') renderNotes();
+  if(tab === 'flash') renderFlash();
+  if(tab === 'pomo') renderPomo();
+  if(tab === 'cfg') renderCfg();
+  if(tab === 'dash') renderDash();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+window.go = go;
+
+// ============================================================
+// ONBOARDING WIZARD
+// ============================================================
+const WIZ_STEPS = 8;
+let wizState = null;
+
+function startOnboarding(force=false){
+  const p = P();
+  if(p.onboarded && !force) return;
+  wizState = {
+    step: 1,
+    name: p.name || '',
+    avatar: p.avatar || 'O',
+    board: 'CAIE',
+    subjects: [],  // [{code, strength}]
+    examSession: 'O/N 2026',
+    deadline: '2026-09-30',
+    examDate: '2026-11-01',
+    dailyHours: 4,
+    apiKey: ''
+  };
+  $('#wiz-bg').classList.add('show');
+  renderWiz();
+}
+
+function renderWiz(){
+  const card = $('#wiz-card');
+  const step = wizState.step;
+  $('#wiz-step').textContent = step;
+  $('#wiz-prog-bar').style.width = (step/WIZ_STEPS*100) + '%';
+  $('#wiz-back').style.visibility = step === 1 ? 'hidden' : 'visible';
+  $('#wiz-next').textContent = step === WIZ_STEPS ? 'finish ✓' : 'next →';
+
+  if(step === 1){
+    card.innerHTML = `
+      <h1>welcome to siege</h1>
+      <p class="wiz-sub">an ai-powered study terminal for igcse students who hate studying but need to grind. let's set up your profile.</p>
+
+      <div class="wiz-strap">
+        <b>// the rule</b>
+        siege does NOT generate fake practice questions with ai. we only reference real past papers (cambridge, edexcel, etc.) with verifiable paper codes. the ai's job is to plan your study and explain real questions — not invent fake ones.
+      </div>
+
+      <div class="field"><label>your name</label><input id="wiz-name" type="text" value="${escapeHTML(wizState.name)}" placeholder="alaa"></div>
+      <div class="field"><label>avatar (1-2 characters)</label><input id="wiz-avatar" type="text" maxlength="2" value="${escapeHTML(wizState.avatar)}" placeholder="A"></div>
+    `;
+    $('#wiz-name').addEventListener('input', e => wizState.name = e.target.value);
+    $('#wiz-avatar').addEventListener('input', e => wizState.avatar = e.target.value || 'O');
+  }
+  else if(step === 2){
+    card.innerHTML = `
+      <h1>which exam board?</h1>
+      <p class="wiz-sub">we currently have full syllabus templates for Cambridge (CAIE) IGCSE and Edexcel IGCSE. other boards are supported but you'll add topics manually.</p>
+      <div class="wiz-options">
+        ${BOARDS.map(b => `
+          <div class="wiz-opt ${wizState.board===b?'on':''}" data-board="${b}">
+            <div class="wiz-opt-title">${b}</div>
+            <div class="wiz-opt-desc">${b==='CAIE' ? 'cambridge international — 20+ pre-built subjects' : b==='Edexcel' ? 'pearson edexcel international gcse — 4+ pre-built subjects' : 'custom — add your own topics & codes'}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    $$('#wiz-card .wiz-opt').forEach(o => o.addEventListener('click', ()=>{ wizState.board = o.dataset.board; renderWiz(); }));
+  }
+  else if(step === 3){
+    const search = wizState._search || '';
+    const list = SUBJECT_ORDER.filter(c => {
+      const s = SYLLABI[c];
+      if(wizState.board === 'CAIE' && s.board !== 'CAIE') return false;
+      if(wizState.board === 'Edexcel' && s.board !== 'Edexcel') return false;
+      if(search && !(s.name.toLowerCase().includes(search.toLowerCase()) || s.code.includes(search))) return false;
+      return true;
+    });
+    card.innerHTML = `
+      <h1>pick your subjects</h1>
+      <p class="wiz-sub">tap to toggle. you can add up to 8 subjects. you can change these later in settings.</p>
+      <div class="wiz-search"><input id="wiz-search" type="text" placeholder="search subject name or code..." value="${escapeHTML(search)}"></div>
+      <div class="wiz-subj-list" id="wiz-subj-list">
+        ${list.map(c => {
+          const s = SYLLABI[c];
+          const on = wizState.subjects.find(x => x.code === c);
+          return `<div class="wiz-subj-row ${on?'on':''}" data-code="${c}">
+            <div class="wsr-chk"></div>
+            <div class="wsr-code">${s.code}</div>
+            <div class="wsr-name">${s.name}${s.tier?' <span class="muted">('+s.tier+')</span>':''}</div>
+            <div class="wsr-board">${s.board}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <p class="muted" style="font-size:10px;margin-top:10px;text-transform:uppercase;letter-spacing:1.5px">${wizState.subjects.length} selected · max 8</p>
+    `;
+    $('#wiz-search').addEventListener('input', e => { wizState._search = e.target.value; renderWiz(); });
+    $$('#wiz-subj-list .wiz-subj-row').forEach(r => r.addEventListener('click', ()=>{
+      const code = r.dataset.code;
+      const idx = wizState.subjects.findIndex(x => x.code === code);
+      if(idx >= 0) wizState.subjects.splice(idx, 1);
+      else if(wizState.subjects.length < 8) wizState.subjects.push({ code, strength: 'medium' });
+      else { toast('max 8 subjects'); return; }
+      renderWiz();
+    }));
+  }
+  else if(step === 4){
+    if(wizState.subjects.length === 0){
+      card.innerHTML = `<h1>no subjects selected</h1><p class="wiz-sub">go back and pick at least one subject.</p>`;
+      return;
+    }
+    card.innerHTML = `
+      <h1>how strong are you in each?</h1>
+      <p class="wiz-sub">we use this to weight your daily study time. weak subjects get more hours.</p>
+      <div style="margin-top:10px">
+        ${wizState.subjects.map((sub, i) => {
+          const s = SYLLABI[sub.code];
+          return `<div class="card" style="margin-bottom:10px;padding:14px">
+            <div class="row-between" style="margin-bottom:8px">
+              <div><b style="font-family:var(--term);color:var(--accent);font-size:14px">${s.code}</b> ${s.name}</div>
+              <div class="muted" style="font-size:10px;text-transform:uppercase">${s.board}</div>
+            </div>
+            <div class="wiz-strength" data-idx="${i}">
+              <button data-s="weak" class="${sub.strength==='weak'?'on':''}">weak</button>
+              <button data-s="medium" class="${sub.strength==='medium'?'on':''}">medium</button>
+              <button data-s="strong" class="${sub.strength==='strong'?'on':''}">strong</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+    $$('#wiz-card .wiz-strength').forEach(strip => {
+      strip.querySelectorAll('button').forEach(b => b.addEventListener('click', ()=>{
+        const idx = parseInt(strip.dataset.idx);
+        wizState.subjects[idx].strength = b.dataset.s;
+        renderWiz();
+      }));
+    });
+  }
+  else if(step === 5){
+    card.innerHTML = `
+      <h1>when is your exam?</h1>
+      <p class="wiz-sub">cambridge runs may/june, oct/nov, and feb/march sessions. set your specific date and the deadline you want to finish all content by (we recommend 1 month before exam).</p>
+      <div class="field"><label>exam session</label>
+        <select id="wiz-session">
+          <option ${wizState.examSession==='O/N 2026'?'selected':''}>O/N 2026</option>
+          <option ${wizState.examSession==='M/J 2026'?'selected':''}>M/J 2026</option>
+          <option ${wizState.examSession==='F/M 2026'?'selected':''}>F/M 2026</option>
+          <option ${wizState.examSession==='O/N 2027'?'selected':''}>O/N 2027</option>
+          <option ${wizState.examSession==='M/J 2027'?'selected':''}>M/J 2027</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>exam date (approx)</label><input id="wiz-exam" type="date" value="${wizState.examDate}"></div>
+        <div class="field"><label>finish-by deadline</label><input id="wiz-deadline" type="date" value="${wizState.deadline}"></div>
+      </div>
+    `;
+    $('#wiz-session').addEventListener('change', e => wizState.examSession = e.target.value);
+    $('#wiz-exam').addEventListener('input', e => wizState.examDate = e.target.value);
+    $('#wiz-deadline').addEventListener('input', e => wizState.deadline = e.target.value);
+  }
+  else if(step === 6){
+    card.innerHTML = `
+      <h1>how many hours can you study a day?</h1>
+      <p class="wiz-sub">be honest. 2 hours done daily beats 8 hours planned and skipped. siege will weight each subject inside this budget.</p>
+      <div class="field"><label>daily study budget (hours)</label><input id="wiz-hours" type="number" min="1" max="12" step="0.5" value="${wizState.dailyHours}"></div>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px">budget per subject (auto): ${wizState.subjects.map(s => {
+        const w = s.strength === 'weak' ? 1.5 : (s.strength === 'medium' ? 1.0 : 0.5);
+        const totalW = wizState.subjects.reduce((a,b)=> a + (b.strength==='weak'?1.5:b.strength==='medium'?1.0:0.5), 0);
+        const h = (w/totalW * wizState.dailyHours).toFixed(1);
+        return `<b style="color:var(--accent)">${SYLLABI[s.code].code}</b> ${h}h`;
+      }).join(' · ')}</p>
+    `;
+    $('#wiz-hours').addEventListener('input', e => { wizState.dailyHours = parseFloat(e.target.value)||4; renderWiz(); });
+  }
+  else if(step === 7){
+    card.innerHTML = `
+      <h1>connect groq (optional)</h1>
+      <p class="wiz-sub">siege uses groq's free api to power the ai assistant. without a key, you still get the rule-based daily plan + all tracking features.</p>
+      <div class="wiz-strap">
+        <b>// how to get a key</b>
+        go to <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a> → sign in with google → "create api key" → paste below.
+        free tier: 30 requests/min, 6000 tokens/min. enough to run siege all day.
+      </div>
+      <div class="field"><label>groq api key</label><input id="wiz-key" type="password" value="${wizState.apiKey}" placeholder="gsk_..."></div>
+      <p class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px">your key is stored only in this browser. it's never sent anywhere except groq.com.</p>
+    `;
+    $('#wiz-key').addEventListener('input', e => wizState.apiKey = e.target.value);
+  }
+  else if(step === 8){
+    card.innerHTML = `
+      <h1>you're ready,student.</h1>
+      <p class="wiz-sub">profile created. let's review and finish.</p>
+      <div class="card" style="margin-top:14px;padding:18px">
+        <div class="row-between"><b>name</b><span>${escapeHTML(wizState.name)}</span></div>
+        <div class="divider-thin"></div>
+        <div class="row-between"><b>board</b><span>${wizState.board}</span></div>
+        <div class="divider-thin"></div>
+        <div class="row-between"><b>subjects</b><span>${wizState.subjects.length}</span></div>
+        <div class="divider-thin"></div>
+        <div class="row-between"><b>exam</b><span>${wizState.examSession} · ${wizState.examDate}</span></div>
+        <div class="divider-thin"></div>
+        <div class="row-between"><b>deadline</b><span>${wizState.deadline}</span></div>
+        <div class="divider-thin"></div>
+        <div class="row-between"><b>daily budget</b><span>${wizState.dailyHours}h</span></div>
+        <div class="divider-thin"></div>
+        <div class="row-between"><b>groq ai</b><span>${wizState.apiKey ? 'connected' : 'offline mode'}</span></div>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:14px;text-transform:uppercase;letter-spacing:1.5px">click finish to enter the terminal. you can change any of this later in settings.</p>
+    `;
+  }
+}
+
+function wizNext(){
+  if(wizState.step === 1 && !wizState.name.trim()){ toast('enter a name'); return; }
+  if(wizState.step === 3 && wizState.subjects.length === 0){ toast('pick at least one subject'); return; }
+  if(wizState.step < WIZ_STEPS){ wizState.step++; renderWiz(); return; }
+  // finish
+  finishOnboarding();
+}
+function wizBack(){
+  if(wizState.step > 1){ wizState.step--; renderWiz(); }
+}
+function wizSkip(){
+  wizNext();
+}
+
+function finishOnboarding(){
+  const p = P();
+  p.name = wizState.name.trim() || 'operator';
+  p.avatar = wizState.avatar.trim() || p.name[0].toUpperCase();
+  p.board = wizState.board;
+  p.examSession = wizState.examSession;
+  p.examDate = wizState.examDate;
+  p.deadline = wizState.deadline;
+  p.dailyHours = wizState.dailyHours;
+  p.apiKey = wizState.apiKey.trim();
+  p.subjects = {};
+  p.subjectStrength = {};
+  wizState.subjects.forEach(s => {
+    p.subjects[s.code] = { topicProgress:{}, papers:[], papersAttempted:{}, notes:{}, mistakes:[], flashcards:[] };
+    p.subjectStrength[s.code] = s.strength;
+  });
+  p.onboarded = true;
+  save();
+  $('#wiz-bg').classList.remove('show');
+  bootRender();
+  toast('welcome, ' + p.name);
+}
+
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+
+function subjPct(code){
+  const s = SYLLABI[code]; if(!s) return 0;
+  const total = s.topics.length;
+  const tp = getSubjState(code).topicProgress;
+  let score = 0;
+  for(let i=0;i<total;i++){
+    const v = tp[i] || 0;
+    score += v === 2 ? 1 : (v === 1 ? 0.5 : 0);
+  }
+  return Math.round(100 * score / total);
+}
+
+function greet(){
+  const h = new Date().getHours();
+  const sets = {
+    morning: ['boot sequence complete,student','wake up. exam clock is moving','good morning,student','sun\'s up. siege ready','morning shift // engaged'],
+    afternoon: ['back at it,student','siege online // afternoon shift','no breaks. afternoon push','operator returning','grind continues'],
+    evening: ['evening protocols active','grind hours,student','last push before sleep','evening session // engaged','one more block'],
+    night: ['nocturnal mode engaged','3am terminal // dangerous','sleep is for losers','late shift // siege awake','operator hasn\'t logged off']
+  };
+  let bucket;
+  if(h<6) bucket='night';
+  else if(h<12) bucket='morning';
+  else if(h<18) bucket='afternoon';
+  else if(h<23) bucket='evening';
+  else bucket='night';
+  const r = rng(dateSeed(todayIso()) + h);
+  return pick(sets[bucket], r);
+}
+
+function updateCountdown(){
+  const p = P();
+  const days = daysBetween(todayIso(), p.examDate);
+  const ddays = Math.max(0, daysBetween(todayIso(), p.deadline));
+  $('#stat-days').textContent = ddays;
+  $('#hero-exam').textContent = days >= 0 ? days : 'passed';
+  const total = Math.max(1, daysBetween(p.created.slice(0,10) || todayIso(), p.deadline));
+  const elapsed = Math.max(1, daysBetween(p.created.slice(0,10) || todayIso(), todayIso()) + 1);
+  $('#hero-day').textContent = elapsed;
+  $('#hero-total').textContent = total;
+  const d = new Date(p.deadline);
+  $('#hero-deadline').textContent = d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'}).toLowerCase();
+}
+
+function renderDash(){
+  $('#hero-title').textContent = greet();
+  updateCountdown();
+  renderStats();
+  renderBars();
+  renderMission(P().mission.tasks);
+  renderWeakAreas();
+  renderSRSPreview();
+}
+
+function renderStats(){
+  const p = P();
+  let papers = 0, topicsDone = 0;
+  enrolledSubjects().forEach(c => {
+    papers += getSubjState(c).papers.length;
+    const tp = getSubjState(c).topicProgress;
+    Object.values(tp).forEach(v => { if(v === 2) topicsDone++; });
+  });
+  $('#stat-papers').textContent = papers;
+  $('#stat-streak').textContent = p.streak.count || 0;
+  $('#stat-topics').textContent = topicsDone;
+  $('#sb-streak').textContent = (p.streak.count || 0) + 'd';
+  const freezeUsed = p.streak.freezeWeek === weekKey(new Date());
+  $('#stat-streak-sub').textContent = freezeUsed ? 'freeze used this week' : 'freeze available';
+}
+
+function renderBars(){
+  const enrolled = enrolledSubjects();
+  const wrap = $('#dash-bars');
+  if(enrolled.length === 0){
+    wrap.innerHTML = `<div class="empty"><div class="big">no subjects enrolled</div><div class="sm">go to subjects tab to add your syllabuses.</div><button class="btn hot" onclick="go('subj')">+ add subjects</button></div>`;
+    return;
+  }
+  wrap.innerHTML = enrolled.map(c => {
+    const s = SYLLABI[c];
+    const pct = subjPct(c);
+    const color = s.color || 'chem';
+    return `<div class="subj-row">
+      <div class="subj-tag">${s.code}</div>
+      <div class="subj-bar-wrap"><div class="subj-bar" style="width:${pct}%;background:repeating-linear-gradient(45deg,var(--${color}) 0,var(--${color}) 6px,rgba(0,0,0,0.4) 6px,rgba(0,0,0,0.4) 12px)"></div></div>
+      <div class="subj-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function renderWeakAreas(){
+  const wrap = $('#dash-weak');
+  const items = [];
+  enrolledSubjects().forEach(c => {
+    const s = SYLLABI[c]; const st = getSubjState(c);
+    s.topics.forEach((t,i) => {
+      const p = st.topicProgress[i] || 0;
+      const recentMistakes = st.mistakes.filter(m => m.topicIdx === i).length;
+      if(p === 0 || (p === 1 && recentMistakes > 0)) items.push({code:c, name:s.name, topic:t, score: (recentMistakes*2) + (p===0?1:0)});
+    });
+  });
+  items.sort((a,b)=> b.score - a.score);
+  const top = items.slice(0,5);
+  if(top.length === 0){
+    wrap.innerHTML = '<p class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px">nothing flagged. log some papers + mistakes to surface weak areas.</p>';
+    return;
+  }
+  wrap.innerHTML = top.map(t => `
+    <div style="padding:8px 10px;border:1px solid var(--line);margin-bottom:4px;font-size:12px;display:flex;justify-content:space-between;align-items:center">
+      <span><b style="font-family:var(--term);color:var(--accent)">${t.code}</b> · ${escapeHTML(t.topic)}</span>
+      <span class="muted" style="font-size:9px;text-transform:uppercase;letter-spacing:1px">score ${t.score}</span>
+    </div>
+  `).join('');
+}
+
+function renderSRSPreview(){
+  const wrap = $('#dash-srs');
+  // simple: topics marked in-progress, not touched recently
+  const items = [];
+  enrolledSubjects().forEach(c => {
+    const s = SYLLABI[c]; const st = getSubjState(c);
+    s.topics.forEach((t,i) => {
+      if((st.topicProgress[i]||0) === 1) items.push({code:c, topic:t, idx:i});
+    });
+  });
+  if(items.length === 0){
+    wrap.innerHTML = '<p class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px">no topics in review queue. mark topics as ~in progress~ to build it.</p>';
+    return;
+  }
+  wrap.innerHTML = items.slice(0,5).map(t => `
+    <div style="padding:8px 10px;border:1px solid var(--line);margin-bottom:4px;font-size:12px">
+      <b style="font-family:var(--term);color:var(--warn)">${t.code}</b> · ${escapeHTML(t.topic)}
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// MISSION GENERATION
+// ============================================================
+function paperCode(code, paperNum, variant, session, year){
+  return `${code}/${paperNum}${variant}/${session}/${String(year).slice(-2)}`;
+}
+
+function ruleMission(){
+  const p = P();
+  const today = todayIso();
+  const r = rng(dateSeed(today));
+  const tasks = [];
+  const enrolled = enrolledSubjects();
+  if(enrolled.length === 0) return [{subj:'sys',type:'lesson',task:'no subjects enrolled. go to subjects tab.',time:'-'}];
+
+  // weight by strength
+  const weights = enrolled.map(c => ({
+    code: c,
+    w: p.subjectStrength[c] === 'weak' ? 1.5 : (p.subjectStrength[c] === 'strong' ? 0.5 : 1.0)
+  }));
+  const totalW = weights.reduce((a,b)=>a+b.w,0);
+  weights.forEach(w => w.hours = (w.w/totalW) * p.dailyHours);
+
+  // for each subject, allocate 1-2 tasks proportional to weight
+  weights.forEach(w => {
+    const subj = SYLLABI[w.code];
+    const st = getSubjState(w.code);
+    const untouched = subj.topics.map((t,i)=>({t,i,s:st.topicProgress[i]||0})).filter(x => x.s !== 2);
+    const hrsLeft = w.hours;
+    if(hrsLeft < 0.4) return;
+
+    // pick a topic (prefer untouched, then in-progress)
+    if(untouched.length){
+      const next = untouched[0];
+      tasks.push({
+        subj: w.code, type:'lesson',
+        task: `[${subj.code} ${subj.name}] Study topic ${pad2(next.i+1)}: **${next.t}**. Write a 1-page summary in your own words.`,
+        time: Math.round(Math.min(60, hrsLeft*60*0.5)) + ' min',
+        topicIdx: next.i
+      });
+    }
+
+    // pick a past paper (always include one if subject is weak or has hours)
+    if(w.hours >= 0.8 || p.subjectStrength[w.code] === 'weak'){
+      const paperOpts = subj.paperStruct;
+      const paper = paperOpts[paperOpts.length > 1 ? 1 : 0]; // bias to "main" paper (usually theory)
+      const year = pick(YEARS.slice(0,5), r);
+      const session = pick(['M/J','O/N'], r);
+      const variant = pick(VARIANTS, r);
+      const code = paperCode(subj.code, paper.num, variant, session, year);
+      tasks.push({
+        subj: w.code, type:'paper',
+        task: `[${subj.code}] Attempt past paper \`${code}\` (${paper.name}). Mark it after using the mark scheme. Log score & wrong questions in SIEGE.`,
+        time: paper.time + ' min',
+        paperCode: code
+      });
+    }
+  });
+
+  // sunday recap
+  const dow = new Date(today).getDay();
+  if(dow === 0 && enrolled.length){
+    tasks.push({
+      subj: enrolled[0], type:'mock',
+      task: `SUNDAY RECAP: re-read your weak topic notes (use the notes vault) + 5 spaced-review flashcards.`,
+      time: '30 min'
+    });
+  }
+
+  return tasks;
+}
+
+function renderMission(tasks){
+  const zone = $('#mission-zone');
+  if(!tasks || tasks.length === 0){
+    zone.innerHTML = '<p class="muted" style="margin-top:14px;font-size:11px;text-transform:uppercase;letter-spacing:1.5px">hit [generate today\'s mission] to load today\'s plan.</p>';
+    return;
+  }
+  const p = P();
+  zone.innerHTML = tasks.map((t,i) => {
+    const done = (p.mission.done||[])[i];
+    const code = SYLLABI[t.subj]?.code || t.subj;
+    const subjPill = `<span class="pill subj">${escapeHTML(code)}</span>`;
+    const typePill = `<span class="pill ${t.type==='paper'?'hot':(t.type==='mock'?'cy':'warn')}">${t.type}</span>`;
+    const timePill = t.time ? `<span class="pill">${escapeHTML(t.time)}</span>` : '';
+    // render task text with paper code linkified
+    let taskHtml = mdRender(t.task);
+    if(t.paperCode){
+      const subj = SYLLABI[t.subj];
+      const [scode, rest] = t.paperCode.split('/');
+      const m = t.paperCode.match(/^(\w+)\/(\d+)(\d)\/(\w+\/\w+)\/(\d+)$/);
+      if(m && subj){
+        const link = gceGuideLink(subj, m[2], m[3], m[4], '20'+m[5]) || '#';
+        taskHtml = taskHtml.replace(new RegExp(`<code>${t.paperCode}</code>`,'g'),
+          `<a class="pcode" href="${link}" target="_blank">${t.paperCode}</a>`);
+      }
+    }
+    return `<div class="mission-item ${done?'done':''}" data-idx="${i}">
+      <div class="mission-check"></div>
+      <div class="mission-body">
+        <div class="mission-task">${taskHtml}</div>
+        <div class="mission-meta">${subjPill}${typePill}${timePill}</div>
+      </div>
+    </div>`;
+  }).join('');
+  $$('#mission-zone .mission-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      if(e.target.tagName === 'A') return;
+      const i = parseInt(item.dataset.idx);
+      p.mission.done = p.mission.done || [];
+      p.mission.done[i] = !p.mission.done[i];
+      save();
+      renderMission(p.mission.tasks);
+      if(p.mission.done[i]) bumpStreak();
+    });
+  });
+}
+
+async function generateMission(){
+  const today = todayIso();
+  const p = P();
+  if(p.mission.date === today && p.mission.tasks.length){
+    if(!confirm('mission already exists for today. regenerate?')) {
+      renderMission(p.mission.tasks); return;
+    }
+  }
+  termLog([['> generating mission for '+today+'...', 'dim']], true);
+  let tasks;
+  if(p.apiKey){
+    try {
+      termLog([['> calling groq // '+p.model, 'dim']]);
+      tasks = await aiMission();
+      termLog([['> ai mission generated · '+tasks.length+' tasks', 'ok']]);
+    } catch(err){
+      termLog([['> ai call failed: '+err.message.slice(0,80), 'hot'],['> falling back to rule-based plan', 'warn']]);
+      tasks = ruleMission();
+    }
+  } else {
+    termLog([['> no groq api key set (cfg tab)', 'warn'],['> using rule-based plan', 'dim']]);
+    tasks = ruleMission();
+  }
+  p.mission = { date: today, tasks, done: new Array(tasks.length).fill(false) };
+  save();
+  renderMission(tasks);
+  termLog([['> mission committed.', 'ok']]);
+}
+
+function termLog(lines, reset=false){
+  let zone = $('#term-zone');
+  if(reset || !zone.querySelector('.term-out')){
+    zone.innerHTML = '<div class="term-out"></div>';
+  }
+  const out = zone.querySelector('.term-out');
+  lines.forEach(([txt, cls]) => {
+    const l = el('div', { class: 'line ' + (cls||'') });
+    l.textContent = txt;
+    out.appendChild(l);
+  });
+  out.scrollTop = out.scrollHeight;
+}
+
+// ============================================================
+// STREAK
+// ============================================================
+function bumpStreak(){
+  const p = P();
+  const today = todayIso();
+  if(p.streak.lastDay === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  if(p.streak.lastDay === yesterday){
+    p.streak.count = (p.streak.count||0) + 1;
+  } else if(!p.streak.lastDay){
+    p.streak.count = 1;
+  } else {
+    // check if freeze available
+    const wk = weekKey(new Date());
+    if(p.streak.freezeWeek !== wk){
+      p.streak.freezeWeek = wk;
+      p.streak.count = (p.streak.count||0) + 1;
+      toast('streak freeze auto-applied');
+    } else {
+      p.streak.count = 1;
+    }
+  }
+  p.streak.lastDay = today;
+  save();
+  renderStats();
+}
+
+// ============================================================
+// MARKDOWN RENDER (limited)
+// ============================================================
+function mdRender(s){
+  if(!s) return '';
+  s = String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s = s.replace(/```([\s\S]*?)```/g, (m,c) => `<pre>${c}</pre>`);
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  // headings
+  s = s.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+  s = s.replace(/^## (.*$)/gm, '<h3>$1</h3>');
+  // bullets/numbered
+  const lines = s.split('\n');
+  let out = '';
+  let inUL = false, inOL = false;
+  for(let line of lines){
+    if(/^\s*[-*]\s+/.test(line)){
+      if(inOL){ out += '</ol>'; inOL = false; }
+      if(!inUL){ out += '<ul>'; inUL = true; }
+      out += '<li>' + line.replace(/^\s*[-*]\s+/,'') + '</li>';
+    } else if(/^\s*\d+\.\s+/.test(line)){
+      if(inUL){ out += '</ul>'; inUL = false; }
+      if(!inOL){ out += '<ol>'; inOL = true; }
+      out += '<li>' + line.replace(/^\s*\d+\.\s+/,'') + '</li>';
+    } else {
+      if(inUL){ out += '</ul>'; inUL = false; }
+      if(inOL){ out += '</ol>'; inOL = false; }
+      if(line.trim()) out += '<p>' + line + '</p>';
+    }
+  }
+  if(inUL) out += '</ul>';
+  if(inOL) out += '</ol>';
+  return out;
+}
+
+
+// ============================================================
+// SUBJECTS VIEW
+// ============================================================
+let subjActive = '';
+
+function renderSubjects(){
+  const enrolled = enrolledSubjects();
+  const sel = $('#subj-picker');
+  $('#subj-count').textContent = enrolled.length + ' enrolled';
+
+  if(enrolled.length === 0){
+    sel.innerHTML = '<option>no subjects enrolled</option>';
+    $('#subj-content').innerHTML = `<div class="empty">
+      <div class="big">no subjects yet</div>
+      <div class="sm">add a subject from the catalog to start tracking topics, papers, notes, and flashcards.</div>
+      <button class="btn hot" id="empty-add">+ add a subject</button>
+    </div>`;
+    $('#empty-add').addEventListener('click', openSubjPicker);
+    return;
+  }
+
+  sel.innerHTML = enrolled.map(c => {
+    const s = SYLLABI[c];
+    return `<option value="${c}" ${c===subjActive?'selected':''}>${s.code} · ${s.name} (${s.board})</option>`;
+  }).join('');
+  if(!subjActive || !enrolled.includes(subjActive)) subjActive = enrolled[0];
+  sel.value = subjActive;
+
+  renderSubjDetail();
+}
+
+function renderSubjDetail(){
+  const c = subjActive;
+  const s = SYLLABI[c];
+  if(!s){ $('#subj-content').innerHTML = ''; return; }
+  const st = getSubjState(c);
+  const pct = subjPct(c);
+  const totalTopics = s.topics.length;
+  const doneTopics = s.topics.filter((_,i)=>(st.topicProgress[i]||0)===2).length;
+  const inProg = s.topics.filter((_,i)=>(st.topicProgress[i]||0)===1).length;
+
+  $('#subj-content').innerHTML = `
+    <div class="card">
+      <div class="row-between">
+        <div>
+          <h3 style="font-size:22px"><span style="font-family:var(--term);color:var(--accent);font-size:20px">${s.code}</span> · ${s.name}</h3>
+          <p class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin-top:4px">${s.board}${s.tier?' · '+s.tier:''} · ${P().subjectStrength[c] || 'medium'}</p>
+        </div>
+        <div class="stat-big" style="font-size:42px">${pct}%</div>
+      </div>
+      <div class="divider-thin"></div>
+      <div class="row" style="margin-top:10px">
+        <span class="pill">${totalTopics} topics</span>
+        <span class="pill ok">${doneTopics} done</span>
+        <span class="pill warn">${inProg} in progress</span>
+        <span class="pill">${st.papers.length} papers logged</span>
+        <span class="pill">${st.mistakes.length} mistakes</span>
+        <span class="pill">${st.flashcards.length} cards</span>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <div class="seg" id="subj-strength">
+          ${['weak','medium','strong'].map(x => `<button data-s="${x}" class="${(P().subjectStrength[c]||'medium')===x?'on':''}">${x}</button>`).join('')}
+        </div>
+        <button class="btn ghost sm" onclick="go('papers')">past papers →</button>
+        <button class="btn ghost sm" onclick="go('notes')">notes →</button>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="card">
+      <span class="card-tag">// paper structure</span>
+      <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap">
+        ${s.paperStruct.map(p => `<div style="border:1px solid var(--dim);padding:10px 14px;background:var(--bg)">
+          <div style="font-family:var(--term);font-size:18px;color:var(--accent)">paper ${p.num}</div>
+          <div style="font-size:11px;color:var(--ink)">${p.name}</div>
+          <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-top:4px">${p.marks} marks · ${p.time} min</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="card">
+      <span class="card-tag hot">// syllabus topics (click to cycle status)</span>
+      <p style="margin-top:6px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px">○ not started · ~ in progress · ✓ mastered</p>
+      <div class="topic-list" id="topic-list"></div>
+    </div>
+  `;
+  renderTopicList();
+  $$('#subj-strength button').forEach(b => b.addEventListener('click', ()=>{
+    P().subjectStrength[c] = b.dataset.s;
+    save();
+    renderSubjDetail();
+  }));
+  $('#subj-picker').addEventListener('change', e => { subjActive = e.target.value; renderSubjDetail(); }, { once: true });
+}
+
+function renderTopicList(){
+  const c = subjActive;
+  const s = SYLLABI[c]; if(!s) return;
+  const st = getSubjState(c);
+  const wrap = $('#topic-list');
+  wrap.innerHTML = s.topics.map((t,i) => {
+    const v = st.topicProgress[i] || 0;
+    return `<div class="topic s-${v}" data-i="${i}">
+      <div class="topic-status"></div>
+      <span class="topic-num">${pad2(i+1)}</span>
+      <span class="topic-name">${escapeHTML(t)}</span>
+      <span class="topic-act" data-act="notes" data-i="${i}">notes</span>
+    </div>`;
+  }).join('');
+  $$('#topic-list .topic').forEach(t => {
+    t.addEventListener('click', (e) => {
+      if(e.target.classList.contains('topic-act')){
+        const i = parseInt(e.target.dataset.i);
+        openTopicNotes(c, i);
+        return;
+      }
+      const i = parseInt(t.dataset.i);
+      const v = st.topicProgress[i] || 0;
+      st.topicProgress[i] = (v + 1) % 3;
+      save();
+      renderTopicList();
+    });
+  });
+}
+
+function openTopicNotes(code, idx){
+  go('notes');
+  setTimeout(()=>{
+    $('#notes-subj').value = code;
+    renderNotes();
+    setTimeout(()=>{
+      const item = $$('#notes-side .nitem').find(x => parseInt(x.dataset.i) === idx);
+      if(item) item.click();
+    }, 50);
+  }, 100);
+}
+
+function openSubjPicker(){
+  const available = SUBJECT_ORDER.filter(c => !P().subjects[c]);
+  if(available.length === 0){ toast('all catalog subjects added'); return; }
+  openModal(`
+    <h3>add a subject</h3>
+    <p class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">pick from the catalog. you can add custom subjects by editing the syllabus JSON in source.</p>
+    <div class="wiz-search"><input id="ap-search" type="text" placeholder="search..."></div>
+    <div class="wiz-subj-list" id="ap-list" style="max-height:340px">
+      ${available.map(c => {
+        const s = SYLLABI[c];
+        return `<div class="wiz-subj-row" data-code="${c}">
+          <div class="wsr-chk"></div>
+          <div class="wsr-code">${s.code}</div>
+          <div class="wsr-name">${s.name}</div>
+          <div class="wsr-board">${s.board}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  `);
+  $('#ap-search').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase();
+    $$('#ap-list .wiz-subj-row').forEach(r => {
+      const c = r.dataset.code;
+      const s = SYLLABI[c];
+      r.style.display = (s.name.toLowerCase().includes(q) || s.code.includes(q)) ? '' : 'none';
+    });
+  });
+  $$('#ap-list .wiz-subj-row').forEach(r => r.addEventListener('click', ()=>{
+    const c = r.dataset.code;
+    getSubjState(c);
+    P().subjectStrength[c] = 'medium';
+    save();
+    closeModal();
+    subjActive = c;
+    renderSubjects();
+    toast('added ' + SYLLABI[c].code);
+  }));
+}
+
+
+// ============================================================
+// PAST PAPER LIBRARY
+// ============================================================
+
+let paperFilters = { subj:'', paper:'all', year:'all', session:'all', status:'all' };
+
+function paperKey(subjCode, paperNum, variant, session, year){
+  return `${subjCode}|${paperNum}${variant}|${session}|${year}`;
+}
+
+function buildAllPapers(subjCode){
+  const s = SYLLABI[subjCode]; if(!s) return [];
+  const out = [];
+  s.paperStruct.forEach(p => {
+    YEARS.forEach(y => {
+      SESSIONS.forEach(sess => {
+        // F/M usually only variant 2 and only some subjects
+        const variants = sess === 'F/M' ? ['2'] : VARIANTS;
+        // Edexcel typically has fewer variants
+        const useVar = s.board === 'Edexcel' ? ['R'] : variants;
+        useVar.forEach(v => {
+          out.push({
+            subjCode: s.code, paperNum: p.num, variant: v, session: sess, year: y,
+            paperMeta: p,
+            key: paperKey(s.code, p.num, v, sess, y),
+            code: `${s.code}/${p.num}${v}/${sess}/${String(y).slice(-2)}`
+          });
+        });
+      });
+    });
+  });
+  return out;
+}
+
+function renderPaperLibrary(){
+  const enrolled = enrolledSubjects();
+  const subjSel = $('#pf-subj');
+  if(enrolled.length === 0){
+    subjSel.innerHTML = '<option>no subjects</option>';
+    $('#papers-grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">no subjects</div><div class="sm">enroll in subjects first to browse past papers.</div><button class="btn hot" onclick="go('subj')">go to subjects →</button></div>`;
+    return;
+  }
+  subjSel.innerHTML = enrolled.map(c => `<option value="${c}">${SYLLABI[c].code} · ${SYLLABI[c].name}</option>`).join('');
+  if(!paperFilters.subj || !enrolled.includes(paperFilters.subj)) paperFilters.subj = enrolled[0];
+  subjSel.value = paperFilters.subj;
+
+  // year options
+  const yearSel = $('#pf-year');
+  yearSel.innerHTML = '<option value="all">all</option>' + YEARS.map(y => `<option value="${y}">${y}</option>`).join('');
+  yearSel.value = paperFilters.year;
+
+  // paper component options
+  const paperSel = $('#pf-paper');
+  const s = SYLLABI[paperFilters.subj];
+  paperSel.innerHTML = '<option value="all">all</option>' + s.paperStruct.map(p => `<option value="${p.num}">paper ${p.num}</option>`).join('');
+  paperSel.value = paperFilters.paper;
+
+  $('#pf-session').value = paperFilters.session;
+  $('#pf-status').value = paperFilters.status;
+
+  // wire
+  subjSel.onchange = e => { paperFilters.subj = e.target.value; paperFilters.paper = 'all'; renderPaperLibrary(); };
+  paperSel.onchange = e => { paperFilters.paper = e.target.value; renderPapersGrid(); };
+  yearSel.onchange = e => { paperFilters.year = e.target.value; renderPapersGrid(); };
+  $('#pf-session').onchange = e => { paperFilters.session = e.target.value; renderPapersGrid(); };
+  $('#pf-status').onchange = e => { paperFilters.status = e.target.value; renderPapersGrid(); };
+  $('#pf-reset').onclick = () => { paperFilters = { subj:paperFilters.subj, paper:'all', year:'all', session:'all', status:'all' }; renderPaperLibrary(); };
+
+  renderPapersGrid();
+}
+
+function renderPapersGrid(){
+  const subj = SYLLABI[paperFilters.subj];
+  const st = getSubjState(paperFilters.subj);
+  const papers = buildAllPapers(paperFilters.subj).filter(p => {
+    if(paperFilters.paper !== 'all' && p.paperNum !== paperFilters.paper) return false;
+    if(paperFilters.year !== 'all' && p.year !== parseInt(paperFilters.year)) return false;
+    if(paperFilters.session !== 'all' && p.session !== paperFilters.session) return false;
+    const status = st.papersAttempted[p.key];
+    if(paperFilters.status === 'todo' && status) return false;
+    if(paperFilters.status === 'attempted' && status !== 'attempted') return false;
+    if(paperFilters.status === 'done' && status !== 'done') return false;
+    return true;
+  });
+
+  const wrap = $('#papers-grid');
+  if(papers.length === 0){
+    wrap.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="sm">no papers match these filters.</div></div>';
+    return;
+  }
+  wrap.innerHTML = papers.map(p => {
+    const status = st.papersAttempted[p.key] || '';
+    const scoreEntry = st.papers.find(x => x.key === p.key);
+    const cls = status === 'done' ? 'done' : (status === 'attempted' ? 'attempted' : '');
+    const gce = gceGuideLink(subj, p.paperNum, p.variant, p.session, p.year, 'qp');
+    const gceMs = gceGuideLink(subj, p.paperNum, p.variant, p.session, p.year, 'ms');
+    const sme = smeLink(subj);
+    return `<div class="paper-cell ${cls}" data-key="${p.key}">
+      <div class="paper-code">${p.code}</div>
+      <div class="paper-meta">${p.paperMeta.name} · ${p.paperMeta.marks}m</div>
+      ${scoreEntry ? `<div class="paper-score">${scoreEntry.score}/${scoreEntry.total}</div>` : ''}
+      <div class="paper-links">
+        ${gce ? `<a href="${gce}" target="_blank" onclick="event.stopPropagation()">qp</a>` : ''}
+        ${gceMs ? `<a href="${gceMs}" target="_blank" onclick="event.stopPropagation()">ms</a>` : ''}
+        ${sme ? `<a href="${sme}" target="_blank" onclick="event.stopPropagation()">sme</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  $$('.paper-cell').forEach(c => c.addEventListener('click', ()=>{
+    openPaperModal(c.dataset.key);
+  }));
+}
+
+function openPaperModal(key){
+  const [scode, pnv, sess, yy] = key.split('|');
+  const subj = SYLLABI[paperFilters.subj];
+  const st = getSubjState(paperFilters.subj);
+  const status = st.papersAttempted[key] || 'todo';
+  const entry = st.papers.find(x => x.key === key);
+  const m = pnv.match(/^(\d+)(.)$/);
+  const paperNum = m ? m[1] : pnv.slice(0,-1);
+  const variant = m ? m[2] : pnv.slice(-1);
+  const year = 2000 + parseInt(yy);
+  const code = `${scode}/${pnv}/${sess}/${yy}`;
+  const gce = gceGuideLink(subj, paperNum, variant, sess, year, 'qp');
+  const gceMs = gceGuideLink(subj, paperNum, variant, sess, year, 'ms');
+  const pp = papaCambridgeLink(subj);
+  const sme = smeLink(subj);
+  const pm = subj.paperStruct.find(x => x.num === paperNum);
+
+  openModal(`
+    <h3>${code}</h3>
+    <p class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">${pm ? pm.name + ' · ' + pm.marks + ' marks · ' + pm.time + ' min' : ''}</p>
+
+    <div class="card" style="background:var(--bg);margin-bottom:16px">
+      <span class="card-tag">// open paper</span>
+      <div class="row" style="margin-top:10px;flex-wrap:wrap">
+        ${gce ? `<a class="btn ghost sm" href="${gce}" target="_blank">question paper →</a>` : ''}
+        ${gceMs ? `<a class="btn ghost sm" href="${gceMs}" target="_blank">mark scheme →</a>` : ''}
+        ${pp ? `<a class="btn ghost sm" href="${pp}" target="_blank">papacambridge →</a>` : ''}
+        ${sme ? `<a class="btn ghost sm" href="${sme}" target="_blank">savemyexams →</a>` : ''}
+      </div>
+    </div>
+
+    <div class="field">
+      <label>status</label>
+      <div class="seg" id="pm-status-seg">
+        <button data-s="todo" class="${status==='todo'?'on':''}">not started</button>
+        <button data-s="attempted" class="${status==='attempted'?'on':''}">attempted</button>
+        <button data-s="done" class="${status==='done'?'on':''}">done & marked</button>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field"><label>score</label><input type="number" id="pm-score" value="${entry?entry.score:''}" min="0"></div>
+      <div class="field"><label>total</label><input type="number" id="pm-total" value="${entry?entry.total:(pm?pm.marks:'')}" min="0"></div>
+    </div>
+
+    <div class="field">
+      <label>wrong question numbers (comma-separated)</label>
+      <input type="text" id="pm-wrong" value="${entry && entry.wrongQs ? entry.wrongQs.join(',') : ''}" placeholder="e.g. 3, 5, 7b">
+    </div>
+
+    <div class="field">
+      <label>notes</label>
+      <textarea id="pm-notes" placeholder="any reflections on this paper">${entry && entry.notes ? escapeHTML(entry.notes) : ''}</textarea>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <button class="btn hot" id="pm-save">save</button>
+      <button class="btn ghost" onclick="closeModal()">cancel</button>
+      ${entry ? '<button class="btn danger" id="pm-delete">delete log</button>' : ''}
+    </div>
+  `);
+
+  let newStatus = status;
+  $$('#pm-status-seg button').forEach(b => b.addEventListener('click', ()=>{
+    newStatus = b.dataset.s;
+    $$('#pm-status-seg button').forEach(x => x.classList.toggle('on', x.dataset.s === newStatus));
+  }));
+
+  $('#pm-save').addEventListener('click', ()=>{
+    const score = parseInt($('#pm-score').value);
+    const total = parseInt($('#pm-total').value);
+    const wrongStr = $('#pm-wrong').value.trim();
+    const wrongQs = wrongStr ? wrongStr.split(',').map(s=>s.trim()).filter(Boolean) : [];
+    const notes = $('#pm-notes').value;
+    st.papersAttempted[key] = newStatus;
+    if(newStatus === 'done' && !isNaN(score) && !isNaN(total)){
+      const existing = st.papers.findIndex(x => x.key === key);
+      const rec = { key, code, score, total, date: todayIso(), wrongQs, notes };
+      if(existing >= 0) st.papers[existing] = rec;
+      else st.papers.push(rec);
+    } else if(newStatus !== 'done'){
+      // remove score record if not done
+      st.papers = st.papers.filter(x => x.key !== key);
+    }
+    save();
+    closeModal();
+    renderPaperLibrary();
+    if(newStatus === 'done') bumpStreak();
+    toast('paper logged');
+  });
+
+  const delBtn = $('#pm-delete');
+  if(delBtn) delBtn.addEventListener('click', ()=>{
+    if(!confirm('delete this paper log?')) return;
+    st.papers = st.papers.filter(x => x.key !== key);
+    delete st.papersAttempted[key];
+    save();
+    closeModal();
+    renderPaperLibrary();
+  });
+}
+
+
+// ============================================================
+// AI MODES + GROQ STREAMING
+// ============================================================
+let aiMode = 'plan';
+let aiBusy = false;
+
+const AI_MODES = {
+  plan: {
+    label: '// plan mode',
+    desc: 'plan your study sessions',
+    sys: (p, ctx) => `You are SIEGE.AI in PLAN mode — a brutalist IGCSE study coach. Thestudent chats with you to plan their study sessions, talk through schedule, figure out priorities.
+
+OPERATOR: ${p.name}. STRENGTHS/WEAKNESSES: ${ctx.strengthsSummary}.
+ENROLLED SUBJECTS: ${ctx.subjectList}.
+EXAM: ${p.examSession}, deadline ${p.deadline}, ${ctx.daysLeft} days left.
+DAILY BUDGET: ${p.dailyHours}h.
+
+When they ask "what should i study today" or "how do i start", give them concrete advice in PROSE — name specific topics, name specific past papers. For the official structured daily mission, they click [generate today's mission] on the dashboard (separate generator). In CHAT you are conversational, not JSON.
+
+CRITICAL RULES:
+1. NEVER invent past paper questions. NEVER make up paper codes.
+2. When you reference a past paper, use REAL CAIE format: \`{subjectCode}/{paperNum}{variant}/{session}/{yy}\` e.g. \`0620/42/O/N/22\`. Variants 1/2/3 only. Sessions M/J, O/N, F/M only. Years 2018-2024 only.
+3. Reference only syllabus topics from the catalog below.
+4. Tone: blunt, lowercase, slightly depressing tutor energy. no emojis, no exclamation marks.
+5. Output natural prose with **bold** for key points and \`paperCode\` in backticks. NEVER output JSON in chat.
+
+Topic catalog:
+${ctx.topicCatalog}`,
+    quick: ['how do i start studying past papers','what should i prioritise today','am i on track for my exam','best paper to attempt first']
+  },
+
+  explain: {
+    label: '// explain mode',
+    desc: 'paste a past paper question, get a breakdown',
+    sys: (p, ctx) => `You are SIEGE.AI in EXPLAIN mode. The student will paste a real past paper question. Your job:
+
+1. Identify which syllabus topic(s) the question tests.
+2. Break the question into parts.
+3. Walk through the approach WITHOUT giving the final answer first — guide thinking.
+4. Reveal the answer with reasoning at the end.
+5. Note common mistakes students make on this question type.
+
+OPERATOR: ${p.name}. SUBJECTS: ${ctx.subjectList}.
+Tone: blunt, lowercase, no fluff, no emojis. Use **bold** for key terms. Use code blocks for equations.
+
+NEVER invent questions. If the student doesn't paste a real question, ask for one.
+NEVER make up past paper codes. If you reference a paper, it must be one the student mentioned, or in the format \`{code}/{paper}{variant}/{session}/{yy}\`.`,
+    quick: ['help me start','what topic is this?','what\'s the command word asking?','show me the marking points']
+  },
+
+  markscheme: {
+    label: '// mark scheme mode',
+    desc: 'grade your answer like CAIE would',
+    sys: (p, ctx) => `You are SIEGE.AI in MARK SCHEME mode. The student pastes a question + their answer. You evaluate it like a CAIE/Edexcel examiner.
+
+OUTPUT FORMAT:
+**predicted marks: X/Y**
+
+**what scored:**
+- (point) — (mark)
+
+**what was missed:**
+- (point) — (why no mark)
+
+**examiner technique notes:**
+- (specific feedback on structure, command words, mark scheme phrasing)
+
+**rewrite suggestion:**
+(a corrected version that would max out the marks)
+
+CRITICAL: be harsh. CAIE markers don't give marks for "almost right" — exact phrasing matters. Reference the command word (Define / Describe / Explain / Compare / Evaluate / Justify) explicitly.
+
+NEVER invent the mark scheme. If you're unsure of the official MS, say so. Use generic CAIE marking principles.
+
+OPERATOR: ${p.name}. SUBJECTS: ${ctx.subjectList}.`,
+    quick: ['be harsher','what command word was this?','show me a 6/6 version','how do i structure 4-mark answers?']
+  },
+
+  weakness: {
+    label: '// weakness audit',
+    desc: 'find what to fix next',
+    sys: (p, ctx) => `You are SIEGE.AI in WEAKNESS AUDIT mode. Analyse thestudent's data and output a ranked list of weak areas with specific drills.
+
+OPERATOR DATA:
+${ctx.fullState}
+
+OUTPUT:
+1. **top 3 weak topics** — with subject, topic name, evidence (mistakes, low paper scores, untouched topics), recommended drill (real paper code or syllabus topic to study).
+2. **subject-level health check** — one line per enrolled subject: status (on track / behind / critical) + next action.
+3. **time reallocation suggestion** — if thestudent's current strength weighting seems off.
+
+Past paper codes MUST be real CAIE format. NEVER invent questions.
+Tone: blunt, no fluff, no emojis, lowercase.`,
+    quick: ['audit me','show top 3 weak topics','am i on track?','what\'s my biggest risk?']
+  },
+
+  recommender: {
+    label: '// paper recommender',
+    desc: 'which paper should i attempt right now?',
+    sys: (p, ctx) => `You are SIEGE.AI in RECOMMENDER mode. Thestudent asks "what should I attempt now?" — you recommend ONE specific real past paper that maximises learning given:
+
+- their weak topics
+- papers they've already attempted (don't re-recommend)
+- time available
+- their exam session
+
+OUTPUT:
+**recommendation: \`{paperCode}\`** (e.g. \`0620/42/O/N/22\`)
+
+**why this paper:** (1-2 sentences linking tostudent's weak areas)
+**time needed:** (e.g. 75 min)
+**after marking, log:** (which question types/topics to track for the mistake log)
+
+OPERATOR DATA:
+${ctx.fullState}
+
+Past paper codes MUST be real CAIE format and use ONLY years 2018-2024, sessions M/J or O/N or F/M, variants 1/2/3.
+NEVER invent paper codes. If you're unsure a specific paper exists, suggest a paper number/session/variant combination and tell the student to check gceguide.com.`,
+    quick: ['recommend one for me','i have 90 min','easiest paper to start with','hardest paper for chem']
+  },
+
+  concept: {
+    label: '// concept tutor',
+    desc: 'explain a syllabus topic',
+    sys: (p, ctx) => `You are SIEGE.AI in CONCEPT TUTOR mode. The student names a syllabus topic. You explain it at THREE levels:
+
+### eli5
+(1-2 sentences, intuitive analogy)
+
+### standard
+(the proper explanation with key terms in **bold**)
+
+### exam-ready
+(how it's tested on CAIE/Edexcel: typical question types, command words, common traps)
+
+OPERATOR: ${p.name}. SUBJECTS: ${ctx.subjectList}.
+
+Stay STRICTLY inside the named syllabus. Don't drift into university-level material. Don't invent past paper questions. Use code blocks for equations or chemical formulae.
+
+Tone: lowercase, blunt, slightly depressing tutor energy.`,
+    quick: ['explain stoichiometry','explain quadratic formula','explain photosynthesis','explain command words']
+  },
+
+  command: {
+    label: '// command word coach',
+    desc: 'drill describe/explain/justify',
+    sys: (p, ctx) => `You are SIEGE.AI in COMMAND WORD COACH mode. CAIE mark schemes are obsessed with command words. The student asks about a command word OR asks you to drill them.
+
+YOUR JOB:
+- For each command word (Define, State, Describe, Explain, Compare, Contrast, Discuss, Evaluate, Justify, Suggest, Calculate, Outline, Identify), explain what CAIE actually expects.
+- Give a real CAIE example structure (3-mark vs 6-mark).
+- If the student pastes their answer, tell them whether they answered the command word correctly.
+
+OPERATOR: ${p.name}. SUBJECTS: ${ctx.subjectList}.
+
+Reference the official CAIE command word definitions (https://www.cambridgeinternational.org/Images/692872-command-words-guide-igcse.pdf). Never invent papers. Tone: blunt, lowercase.`,
+    quick: ['define vs state','explain vs describe','how to evaluate','what does "suggest" want?']
+  },
+
+  socratic: {
+    label: '// socratic mode',
+    desc: 'ai asks, you answer',
+    sys: (p, ctx) => `You are SIEGE.AI in SOCRATIC mode. Instead of explaining concepts, you ask thestudent leading questions to make them discover the answer themselves.
+
+PROCESS:
+1.student picks a topic.
+2. You ask one focused question at a time.
+3. Wait for their answer. Respond with feedback + a deeper follow-up question.
+4. Build complexity gradually.
+5. End by asking them to teach the concept back to you in 2 sentences.
+
+OPERATOR: ${p.name}. SUBJECTS: ${ctx.subjectList}.
+
+NEVER reveal full answers early. NEVER ask more than ONE question per message. Keep questions short and concrete. Don't invent past paper questions.
+
+Tone: lowercase, calm, patient (not blunt for this mode).`,
+    quick: ['start a session on chem stoichiometry','start a session on quadratics','start a session on photosynthesis']
+  }
+};
+
+function buildContextDigest(){
+  const p = P();
+  const enrolled = enrolledSubjects();
+  const subjectList = enrolled.map(c => `${SYLLABI[c].code}-${SYLLABI[c].name}(${p.subjectStrength[c]||'medium'})`).join('; ');
+  const strengthsSummary = enrolled.map(c => `${SYLLABI[c].code}:${p.subjectStrength[c]||'medium'}`).join(', ');
+  const daysLeft = Math.max(0, daysBetween(todayIso(), p.deadline));
+  const topicCatalog = enrolled.map(c => {
+    const s = SYLLABI[c];
+    return `[${s.code}] ${s.topics.map((t,i)=>`${i}:${t}`).join('; ')}`;
+  }).join('\n');
+
+  // full state for weakness/recommender
+  const subjData = enrolled.map(c => {
+    const s = SYLLABI[c];
+    const st = getSubjState(c);
+    const papersAttempted = Object.keys(st.papersAttempted).length;
+    const avgScore = st.papers.length ? Math.round(st.papers.reduce((a,b)=>a+(b.score/b.total*100),0)/st.papers.length) : null;
+    const inProgressTopics = s.topics.map((t,i)=>({t,p:st.topicProgress[i]||0})).filter(x=>x.p===1).map(x=>x.t);
+    const untouchedTopics = s.topics.map((t,i)=>({t,p:st.topicProgress[i]||0})).filter(x=>x.p===0).map(x=>x.t);
+    const recentMistakes = st.mistakes.slice(-5).map(m=>m.question.slice(0,80));
+    return `[${s.code} ${s.name} | strength: ${p.subjectStrength[c]||'medium'}]
+  papers attempted: ${papersAttempted} | avg %: ${avgScore || '-'}
+  untouched topics: ${untouchedTopics.length ? untouchedTopics.join(', ') : 'none'}
+  in-progress topics: ${inProgressTopics.length ? inProgressTopics.join(', ') : 'none'}
+  recent mistakes: ${recentMistakes.length ? recentMistakes.join(' | ') : 'none'}`;
+  }).join('\n\n');
+
+  const fullState = `${subjData}\n\nstreak: ${p.streak.count||0}d\nbudget: ${p.dailyHours}h/day\nexam: ${p.examSession}`;
+
+  return { subjectList, strengthsSummary, daysLeft, topicCatalog, fullState };
+}
+
+function renderAI(){
+  // mode cards
+  $$('.mode-card').forEach(c => c.classList.toggle('active', c.dataset.mode === aiMode));
+  $$('.mode-card').forEach(c => c.onclick = () => { aiMode = c.dataset.mode; renderAI(); });
+
+  $('#chat-mode-label').textContent = AI_MODES[aiMode].label;
+
+  // status
+  const hasKey = !!P().apiKey;
+  const status = $('#chat-status');
+  status.classList.toggle('off', !hasKey);
+  status.innerHTML = `<span class="dot"></span><span>${hasKey?'connected':'no api key'}</span>`;
+  $('#ai-status').textContent = hasKey ? `groq · ${P().model}` : 'no api key (offline)';
+
+  // quick prompts
+  $('#quick-prompts').innerHTML = AI_MODES[aiMode].quick.map(q => `<button class="quick-prompt">${escapeHTML(q)}</button>`).join('');
+  $$('#quick-prompts .quick-prompt').forEach(b => b.onclick = ()=>{ $('#chat-input').value = b.textContent; sendChat(); });
+
+  // log
+  renderChatLog();
+
+  // input wiring (re-bind safely)
+  $('#chat-send').onclick = sendChat;
+  $('#chat-input').onkeydown = e => { if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); } };
+}
+
+function renderChatLog(){
+  const log = $('#chat-log');
+  const p = P();
+  const hist = p.chatByMode[aiMode] || [];
+  if(hist.length === 0){
+    log.innerHTML = `<div class="chat-empty">
+      <div class="big">${AI_MODES[aiMode].label.replace('// ','')}</div>
+      <div>${AI_MODES[aiMode].desc}</div>
+      <p class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin-top:14px">${P().apiKey ? 'ready. send a message.' : 'add a groq api key in settings to use ai modes.'}</p>
+    </div>`;
+    return;
+  }
+  log.innerHTML = hist.map(m => `<div class="chat-msg ${m.role}">${mdRender(m.content)}</div>`).join('');
+  log.scrollTop = log.scrollHeight;
+}
+
+async function sendChat(){
+  const input = $('#chat-input');
+  const text = input.value.trim();
+  if(!text || aiBusy) return;
+  const p = P();
+  if(!p.apiKey){ toast('add groq api key in settings', 2400, true); go('cfg'); return; }
+  input.value = '';
+  p.chatByMode[aiMode] = p.chatByMode[aiMode] || [];
+  p.chatByMode[aiMode].push({ role: 'user', content: text });
+  save();
+  renderChatLog();
+  aiBusy = true;
+  $('#chat-send').disabled = true;
+  try {
+    await groqStream();
+  } catch(err){
+    toast('ai error: ' + err.message.slice(0,80), 3200, true);
+    p.chatByMode[aiMode].push({ role: 'assistant', content: '`error: ' + err.message + '`' });
+    save();
+    renderChatLog();
+  } finally {
+    aiBusy = false;
+    $('#chat-send').disabled = false;
+  }
+}
+
+async function groqStream(){
+  const p = P();
+  const ctx = buildContextDigest();
+  const sys = AI_MODES[aiMode].sys(p, ctx) + (p.sysPromptExtra ? '\n\nEXTRA: ' + p.sysPromptExtra : '');
+  const messages = [
+    { role: 'system', content: sys },
+    ...p.chatByMode[aiMode].map(m => ({ role: m.role, content: m.content }))
+  ];
+
+  // placeholder msg
+  p.chatByMode[aiMode].push({ role: 'assistant', content: '' });
+  const log = $('#chat-log');
+  renderChatLog();
+  const msgEls = log.querySelectorAll('.chat-msg');
+  const lastMsg = msgEls[msgEls.length - 1];
+  lastMsg.innerHTML = '<span class="streaming-cursor"></span>';
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + p.apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: p.model,
+      messages,
+      stream: true,
+      temperature: aiMode === 'plan' ? 0.4 : 0.7,
+      max_tokens: 2048
+    })
+  });
+
+  if(!res.ok){
+    const errText = await res.text();
+    throw new Error('groq ' + res.status + ': ' + errText.slice(0,120));
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let acc = '';
+
+  while(true){
+    const { done, value } = await reader.read();
+    if(done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for(const line of lines){
+      const trimmed = line.trim();
+      if(!trimmed || !trimmed.startsWith('data:')) continue;
+      const data = trimmed.slice(5).trim();
+      if(data === '[DONE]') break;
+      try {
+        const j = JSON.parse(data);
+        const delta = j.choices?.[0]?.delta?.content || '';
+        if(delta){
+          acc += delta;
+          lastMsg.innerHTML = mdRender(acc) + '<span class="streaming-cursor"></span>';
+          log.scrollTop = log.scrollHeight;
+        }
+      } catch(e){ /* skip */ }
+    }
+  }
+
+  lastMsg.innerHTML = mdRender(acc);
+  p.chatByMode[aiMode][p.chatByMode[aiMode].length - 1].content = acc;
+  save();
+}
+
+// dedicated AI mission caller (used by dashboard's generate button)
+async function aiMission(){
+  const p = P();
+  const ctx = buildContextDigest();
+  const sys = `You are SIEGE.AI's mission generator. Output ONLY a JSON array, no preamble, no markdown fences, no commentary.
+
+OPERATOR: ${p.name}. STRENGTHS/WEAKNESSES: ${ctx.strengthsSummary}.
+ENROLLED SUBJECTS: ${ctx.subjectList}.
+EXAM: ${p.examSession}, deadline ${p.deadline}, ${ctx.daysLeft} days left.
+DAILY BUDGET: ${p.dailyHours}h.
+
+Build today's study mission as a JSON array of 3-6 tasks. Each task references a SPECIFIC real past paper or syllabus topic.
+
+RULES:
+1. NEVER invent past paper questions. NEVER make up paper codes.
+2. Past paper codes MUST follow CAIE format: \`{subjectCode}/{paperNum}{variant}/{session}/{yy}\` e.g. \`0620/42/O/N/22\`. Variants 1/2/3 only. Sessions M/J, O/N, F/M only. Years 2018-2024 only.
+3. Syllabus topic references MUST come from the topics listed below.
+4. Weight tasks toward weak subjects.
+5. Output ONLY a JSON array, no preamble, no markdown fences.
+
+Topic catalog:
+${ctx.topicCatalog}
+
+Output schema:
+[{"subj":"<subjectCode>","type":"lesson|paper|mock","task":"<instruction with **bold** for emphasis and \`paperCode\` in backticks>","time":"<e.g. 45 min>","paperCode":"<code if type=paper>","topicIdx":<int if type=lesson>}]`;
+  const userMsg = `Build today's mission for ${todayIso()}. Output the JSON array only.`;
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization':'Bearer '+p.apiKey, 'Content-Type':'application/json' },
+    body: JSON.stringify({
+      model: p.model,
+      messages: [
+        { role: 'system', content: sys },
+        { role: 'user', content: userMsg }
+      ],
+      temperature: 0.5, max_tokens: 1200
+    })
+  });
+  if(!res.ok){
+    const t = await res.text();
+    throw new Error('groq ' + res.status + ': ' + t.slice(0,100));
+  }
+  const j = await res.json();
+  let raw = j.choices?.[0]?.message?.content || '[]';
+  // strip code fences
+  raw = raw.replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim();
+  // find first [
+  const i = raw.indexOf('['); const k = raw.lastIndexOf(']');
+  if(i >= 0 && k > i) raw = raw.slice(i, k+1);
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch(e){ throw new Error('bad json from ai'); }
+  if(!Array.isArray(parsed) || parsed.length === 0) throw new Error('empty mission');
+  return parsed;
+}
+
+
+// ============================================================
+// POMODORO
+// ============================================================
+let pomoState = { running:false, mode:'focus', secs:0, target:1500, subj:'', interval:null };
+
+function renderPomo(){
+  const p = P();
+  pomoState.target = p.pomoCfg.focus * 60;
+  if(!pomoState.running) pomoState.secs = pomoState.target;
+  $('#pomo-focus').value = p.pomoCfg.focus;
+  $('#pomo-break').value = p.pomoCfg.break;
+  // subject selectors
+  const enrolled = enrolledSubjects();
+  $('#pomo-subj').innerHTML = enrolled.map(c => `<option value="${c}">${SYLLABI[c].code} · ${SYLLABI[c].name}</option>`).join('') || '<option value="">no subjects</option>';
+  if(p.pomoCfg.subj && enrolled.includes(p.pomoCfg.subj)) $('#pomo-subj').value = p.pomoCfg.subj;
+  else if(enrolled.length) { p.pomoCfg.subj = enrolled[0]; $('#pomo-subj').value = enrolled[0]; save(); }
+  $('#pomo-subj-label').textContent = SYLLABI[p.pomoCfg.subj]?.code || '—';
+
+  $('#pomo-subj').onchange = e => { P().pomoCfg.subj = e.target.value; $('#pomo-subj-label').textContent = SYLLABI[e.target.value]?.code || '—'; save(); };
+  $('#pomo-cfg-save').onclick = () => {
+    P().pomoCfg.focus = parseInt($('#pomo-focus').value) || 25;
+    P().pomoCfg.break = parseInt($('#pomo-break').value) || 5;
+    save(); pomoReset(); toast('pomo config saved');
+  };
+  $('#pomo-start').onclick = pomoStart;
+  $('#pomo-pause').onclick = pomoPause;
+  $('#pomo-reset').onclick = pomoReset;
+  renderPomoTime();
+  renderPomoLog();
+}
+
+function renderPomoTime(){
+  const m = Math.floor(pomoState.secs / 60);
+  const s = pomoState.secs % 60;
+  $('#pomo-time').textContent = pad2(m) + ':' + pad2(s);
+  $('#pomo-mode').textContent = pomoState.mode;
+}
+
+function pomoStart(){
+  if(pomoState.running) return;
+  pomoState.running = true;
+  $('#pomo-start').disabled = true;
+  $('#pomo-pause').disabled = false;
+  pomoState.interval = setInterval(()=>{
+    pomoState.secs--;
+    if(pomoState.secs <= 0){
+      clearInterval(pomoState.interval);
+      pomoState.running = false;
+      // log focus session
+      if(pomoState.mode === 'focus'){
+        const p = P();
+        p.studyLog.push({ date: todayIso(), subj: p.pomoCfg.subj, mins: p.pomoCfg.focus, source: 'pomodoro' });
+        save();
+        bumpStreak();
+        toast('focus done · ' + p.pomoCfg.focus + ' min logged');
+        try { new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=').play(); } catch(e){}
+        // switch to break
+        pomoState.mode = 'break';
+        pomoState.target = P().pomoCfg.break * 60;
+        pomoState.secs = pomoState.target;
+      } else {
+        toast('break done · back to focus');
+        pomoState.mode = 'focus';
+        pomoState.target = P().pomoCfg.focus * 60;
+        pomoState.secs = pomoState.target;
+      }
+      $('#pomo-start').disabled = false;
+      $('#pomo-pause').disabled = true;
+      renderPomoTime();
+      renderPomoLog();
+      return;
+    }
+    renderPomoTime();
+  }, 1000);
+}
+
+function pomoPause(){
+  clearInterval(pomoState.interval);
+  pomoState.running = false;
+  $('#pomo-start').disabled = false;
+  $('#pomo-pause').disabled = true;
+}
+
+function pomoReset(){
+  clearInterval(pomoState.interval);
+  pomoState.running = false;
+  pomoState.mode = 'focus';
+  pomoState.target = P().pomoCfg.focus * 60;
+  pomoState.secs = pomoState.target;
+  $('#pomo-start').disabled = false;
+  $('#pomo-pause').disabled = true;
+  renderPomoTime();
+}
+
+function renderPomoLog(){
+  const today = todayIso();
+  const logs = P().studyLog.filter(l => l.date === today);
+  if(logs.length === 0){
+    $('#pomo-log').innerHTML = '<p class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px">no sessions logged today.</p>';
+    return;
+  }
+  const byS = {};
+  logs.forEach(l => { byS[l.subj] = (byS[l.subj]||0) + l.mins; });
+  $('#pomo-log').innerHTML = Object.entries(byS).map(([code,mins]) =>
+    `<div class="row-between" style="padding:8px 0;border-top:1px solid var(--line)"><span><b style="font-family:var(--term);color:var(--accent)">${SYLLABI[code]?.code||code}</b> ${SYLLABI[code]?.name||''}</span><span style="font-family:var(--term);font-size:18px">${fmtMins(mins)}</span></div>`
+  ).join('');
+}
+
+// ============================================================
+// STATS / CHARTS
+// ============================================================
+function renderStatsCharts(){
+  // weekly time chart
+  drawTimeChart();
+  drawScoreChart();
+  drawHeatmap();
+  drawMasteryMap();
+}
+
+function drawTimeChart(){
+  const canvas = $('#chart-time');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const css = getComputedStyle(document.body);
+  const accent = css.getPropertyValue('--accent').trim() || '#ff0033';
+  const ink = css.getPropertyValue('--ink').trim() || '#fff';
+  const muted = css.getPropertyValue('--muted').trim() || '#666';
+  const line = css.getPropertyValue('--line').trim() || '#1f1f1f';
+
+  // last 7 days
+  const days = [];
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(dayKey(d));
+  }
+  const data = days.map(d => P().studyLog.filter(l => l.date === d).reduce((a,b)=>a+b.mins,0));
+  const max = Math.max(60, ...data);
+  const padL = 40, padB = 30, padT = 14, padR = 14;
+  const cw = W - padL - padR;
+  const ch = H - padB - padT;
+  const bw = cw / 7 - 8;
+  // grid
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  for(let i=0;i<=4;i++){
+    const y = padT + (ch * i/4);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W-padR, y); ctx.stroke();
+    ctx.fillStyle = muted; ctx.font = '10px JetBrains Mono';
+    ctx.fillText(Math.round(max*(1 - i/4)) + 'm', 2, y+3);
+  }
+  // bars
+  data.forEach((v,i) => {
+    const x = padL + cw*i/7 + 4;
+    const bh = (v / max) * ch;
+    ctx.fillStyle = accent;
+    ctx.fillRect(x, padT + ch - bh, bw, bh);
+    // day label
+    ctx.fillStyle = muted; ctx.font = '10px JetBrains Mono';
+    const d = days[i].slice(-5);
+    ctx.fillText(d, x, H - 8);
+  });
+}
+
+function drawScoreChart(){
+  const canvas = $('#chart-scores');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const css = getComputedStyle(document.body);
+  const accent = css.getPropertyValue('--accent').trim() || '#ff0033';
+  const sec = css.getPropertyValue('--sec').trim() || '#0fc';
+  const muted = css.getPropertyValue('--muted').trim() || '#666';
+  const line = css.getPropertyValue('--line').trim() || '#1f1f1f';
+
+  const allPapers = [];
+  enrolledSubjects().forEach(c => {
+    getSubjState(c).papers.forEach(p => allPapers.push({ ...p, code: c, pct: p.score/p.total*100 }));
+  });
+  allPapers.sort((a,b)=> new Date(a.date) - new Date(b.date));
+
+  const padL = 40, padB = 26, padT = 14, padR = 14;
+  const cw = W - padL - padR, ch = H - padB - padT;
+
+  // grid
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  for(let i=0;i<=4;i++){
+    const y = padT + (ch * i/4);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W-padR, y); ctx.stroke();
+    ctx.fillStyle = muted; ctx.font = '10px JetBrains Mono';
+    ctx.fillText((100 - i*25) + '%', 2, y+3);
+  }
+
+  if(allPapers.length === 0){
+    ctx.fillStyle = muted; ctx.font = '11px JetBrains Mono';
+    ctx.fillText('no papers logged yet', W/2 - 70, H/2);
+    return;
+  }
+  // line
+  ctx.strokeStyle = accent; ctx.lineWidth = 2;
+  ctx.beginPath();
+  allPapers.forEach((p,i)=>{
+    const x = padL + (allPapers.length > 1 ? (cw * i/(allPapers.length-1)) : cw/2);
+    const y = padT + ch - (p.pct/100)*ch;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  // dots
+  allPapers.forEach((p,i)=>{
+    const x = padL + (allPapers.length > 1 ? (cw * i/(allPapers.length-1)) : cw/2);
+    const y = padT + ch - (p.pct/100)*ch;
+    ctx.fillStyle = accent;
+    ctx.fillRect(x-3, y-3, 6, 6);
+  });
+}
+
+function drawHeatmap(){
+  const wrap = $('#heatmap');
+  if(!wrap) return;
+  // 52 weeks x 7 days, oldest to newest
+  const cells = [];
+  const now = new Date(); now.setHours(0,0,0,0);
+  const start = new Date(now); start.setDate(start.getDate() - (52*7 - 1));
+  const log = P().studyLog;
+  const byDay = {};
+  log.forEach(l => { byDay[l.date] = (byDay[l.date]||0) + l.mins; });
+  const max = Math.max(60, ...Object.values(byDay));
+  for(let i=0;i<52*7;i++){
+    const d = new Date(start); d.setDate(d.getDate() + i);
+    const k = dayKey(d);
+    const v = byDay[k] || 0;
+    let lvl = 0;
+    if(v > 0 && v <= max*0.25) lvl = 1;
+    else if(v <= max*0.5) lvl = 2;
+    else if(v <= max*0.75) lvl = 3;
+    else if(v > 0) lvl = 4;
+    cells.push({ k, v, lvl });
+  }
+  // build columns (week=col, day=row in column)
+  wrap.innerHTML = '';
+  for(let week=0; week<52; week++){
+    const col = el('div', { style:'display:flex;flex-direction:column;gap:2px' });
+    for(let day=0; day<7; day++){
+      const i = week*7 + day;
+      const c = cells[i];
+      if(c){
+        const cell = el('div', { class:'heatmap-cell', 'data-lvl': c.lvl, title: c.k + ' · ' + fmtMins(c.v) });
+        col.appendChild(cell);
+      }
+    }
+    wrap.appendChild(col);
+  }
+}
+
+function drawMasteryMap(){
+  const wrap = $('#mastery-map');
+  if(!wrap) return;
+  const enrolled = enrolledSubjects();
+  if(enrolled.length === 0){ wrap.innerHTML = '<p class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px">no subjects.</p>'; return; }
+  wrap.innerHTML = enrolled.map(c => {
+    const s = SYLLABI[c];
+    const st = getSubjState(c);
+    return `<div style="margin-bottom:14px">
+      <div style="font-family:var(--display);font-size:12px;text-transform:lowercase;color:var(--ink);margin-bottom:6px">${s.code} · ${s.name}</div>
+      <div style="display:flex;gap:2px;flex-wrap:wrap">
+        ${s.topics.map((t,i)=>{
+          const v = st.topicProgress[i] || 0;
+          const bg = v === 2 ? 'var(--ok)' : v === 1 ? 'var(--warn)' : 'var(--bg-3)';
+          return `<div style="width:14px;height:14px;background:${bg};border:1px solid var(--line)" title="${escapeHTML(t)}"></div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// MISTAKES
+// ============================================================
+function renderMistakes(){
+  const enrolled = enrolledSubjects();
+  $('#mistake-filter').innerHTML = '<option value="all">all subjects</option>' + enrolled.map(c=>`<option value="${c}">${SYLLABI[c].code} · ${SYLLABI[c].name}</option>`).join('');
+  $('#mistake-add').onclick = openMistakeModal;
+  $('#mistake-filter').onchange = renderMistakesList;
+  renderMistakesList();
+}
+
+function renderMistakesList(){
+  const filt = $('#mistake-filter').value;
+  const all = [];
+  enrolledSubjects().forEach(c => {
+    getSubjState(c).mistakes.forEach((m,i) => all.push({...m, subjCode:c, idx:i}));
+  });
+  const list = filt === 'all' ? all : all.filter(m => m.subjCode === filt);
+  list.sort((a,b)=> new Date(b.date) - new Date(a.date));
+  const wrap = $('#mistakes-list');
+  if(list.length === 0){
+    wrap.innerHTML = `<div class="empty"><div class="big">no mistakes logged</div><div class="sm">log questions you got wrong on past papers to build your weakness map.</div><button class="btn hot" onclick="openMistakeModal()">+ log a mistake</button></div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(m => {
+    const s = SYLLABI[m.subjCode];
+    const topic = m.topicIdx >= 0 ? s.topics[m.topicIdx] : null;
+    return `<div class="mistake-item">
+      <div class="mi-head">
+        <div class="mi-meta">
+          <span class="pill subj">${s.code}</span>
+          ${m.paperCode ? `<span class="pill hot">${escapeHTML(m.paperCode)}</span>` : ''}
+          ${topic ? `<span class="pill">${escapeHTML(topic)}</span>` : ''}
+          <span>${m.date}</span>
+        </div>
+        <div class="row"><button class="btn xs danger" onclick="deleteMistake('${m.subjCode}',${m.idx})">delete</button></div>
+      </div>
+      <div class="mi-q">${escapeHTML(m.question)}</div>
+      ${m.explanation ? `<div class="mi-exp">${escapeHTML(m.explanation)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function openMistakeModal(){
+  const enrolled = enrolledSubjects();
+  if(enrolled.length === 0){ toast('enroll in a subject first'); return; }
+  openModal(`
+    <h3>log a mistake</h3>
+    <div class="field"><label>subject</label><select id="mm-subj">${enrolled.map(c=>`<option value="${c}">${SYLLABI[c].code} · ${SYLLABI[c].name}</option>`).join('')}</select></div>
+    <div class="field"><label>topic (optional)</label><select id="mm-topic"></select></div>
+    <div class="field"><label>past paper code (optional)</label><input id="mm-paper" placeholder="0620/42/O/N/22"></div>
+    <div class="field"><label>question (what you got wrong)</label><textarea id="mm-q" placeholder="paste the question or describe it"></textarea></div>
+    <div class="field"><label>why you got it wrong / how to fix</label><textarea id="mm-exp" placeholder="optional but valuable. use siege.ai → explain mode to help with this."></textarea></div>
+    <div class="row"><button class="btn hot" id="mm-save">save</button><button class="btn ghost" onclick="closeModal()">cancel</button></div>
+  `);
+  const fillTopics = () => {
+    const c = $('#mm-subj').value;
+    $('#mm-topic').innerHTML = '<option value="-1">— none —</option>' + SYLLABI[c].topics.map((t,i)=>`<option value="${i}">${escapeHTML(t)}</option>`).join('');
+  };
+  fillTopics();
+  $('#mm-subj').onchange = fillTopics;
+  $('#mm-save').onclick = () => {
+    const c = $('#mm-subj').value;
+    const q = $('#mm-q').value.trim();
+    if(!q){ toast('question required'); return; }
+    const m = {
+      question: q,
+      explanation: $('#mm-exp').value.trim(),
+      paperCode: $('#mm-paper').value.trim(),
+      topicIdx: parseInt($('#mm-topic').value),
+      date: todayIso()
+    };
+    getSubjState(c).mistakes.push(m);
+    save();
+    closeModal();
+    renderMistakesList();
+    toast('mistake logged');
+  };
+}
+window.openMistakeModal = openMistakeModal;
+
+function deleteMistake(code, idx){
+  if(!confirm('delete this mistake?')) return;
+  getSubjState(code).mistakes.splice(idx, 1);
+  save();
+  renderMistakesList();
+}
+window.deleteMistake = deleteMistake;
+
+// ============================================================
+// NOTES VAULT
+// ============================================================
+let noteActive = { code:'', topicIdx:-1 };
+const saveNoteDebounced = debounce(()=>{
+  if(!noteActive.code || noteActive.topicIdx < 0) return;
+  const st = getSubjState(noteActive.code);
+  st.notes[noteActive.topicIdx] = $('#notes-edit').value;
+  save();
+  $('#notes-status').textContent = 'saved · ' + new Date().toLocaleTimeString();
+}, 700);
+
+function renderNotes(){
+  const enrolled = enrolledSubjects();
+  $('#notes-subj').innerHTML = enrolled.map(c=>`<option value="${c}">${SYLLABI[c].code} · ${SYLLABI[c].name}</option>`).join('') || '<option>no subjects</option>';
+  if(!noteActive.code || !enrolled.includes(noteActive.code)) noteActive.code = enrolled[0] || '';
+  $('#notes-subj').value = noteActive.code;
+  $('#notes-subj').onchange = e => { noteActive = { code: e.target.value, topicIdx: -1 }; renderNotes(); };
+  renderNotesSide();
+  renderNotesEdit();
+}
+
+function renderNotesSide(){
+  const wrap = $('#notes-side');
+  if(!noteActive.code){ wrap.innerHTML = ''; return; }
+  const s = SYLLABI[noteActive.code];
+  const st = getSubjState(noteActive.code);
+  wrap.innerHTML = s.topics.map((t,i) => {
+    const has = !!st.notes[i];
+    const active = noteActive.topicIdx === i;
+    return `<div class="nitem ${active?'active':''}" data-i="${i}">
+      <div style="display:flex;justify-content:space-between"><span>${pad2(i+1)} · ${escapeHTML(t)}</span>${has?'<span class="dim">●</span>':''}</div>
+    </div>`;
+  }).join('');
+  $$('#notes-side .nitem').forEach(n => n.onclick = ()=>{
+    noteActive.topicIdx = parseInt(n.dataset.i);
+    renderNotes();
+  });
+}
+
+function renderNotesEdit(){
+  const ta = $('#notes-edit');
+  if(noteActive.topicIdx < 0){
+    ta.value = '';
+    ta.placeholder = 'select a topic on the left to start taking notes...';
+    ta.disabled = true;
+    $('#notes-status').textContent = 'no topic selected';
+    ta.oninput = null;
+    return;
+  }
+  ta.disabled = false;
+  const s = SYLLABI[noteActive.code];
+  const st = getSubjState(noteActive.code);
+  ta.value = st.notes[noteActive.topicIdx] || '';
+  ta.placeholder = `# ${s.topics[noteActive.topicIdx]}\n\nwrite your summary here. supports markdown (basic).`;
+  $('#notes-status').textContent = `${s.code} · topic ${pad2(noteActive.topicIdx+1)}`;
+  ta.oninput = () => { $('#notes-status').textContent = 'saving...'; saveNoteDebounced(); };
+}
+
+// ============================================================
+// FLASHCARDS
+// ============================================================
+let flashState = { mode:'browse', subj:'', queue:[], idx:0, flipped:false };
+
+function renderFlash(){
+  const enrolled = enrolledSubjects();
+  $('#flash-subj').innerHTML = enrolled.map(c=>`<option value="${c}">${SYLLABI[c].code} · ${SYLLABI[c].name}</option>`).join('') || '<option>no subjects</option>';
+  if(!flashState.subj || !enrolled.includes(flashState.subj)) flashState.subj = enrolled[0] || '';
+  $('#flash-subj').value = flashState.subj;
+  $('#flash-subj').onchange = e => { flashState.subj = e.target.value; flashState.mode = 'browse'; renderFlash(); };
+  $('#flash-add').onclick = openFlashAdd;
+  $('#flash-review').onclick = () => { flashState.mode = 'review'; flashState.idx = 0; flashState.flipped = false; renderFlash(); };
+  $('#flash-all').onclick = () => { flashState.mode = 'browse'; renderFlash(); };
+
+  if(!flashState.subj){
+    $('#flash-content').innerHTML = `<div class="empty"><div class="big">no subjects</div></div>`;
+    return;
+  }
+  const cards = getSubjState(flashState.subj).flashcards;
+  if(cards.length === 0){
+    $('#flash-content').innerHTML = `<div class="empty"><div class="big">no flashcards</div><div class="sm">create your first card for ${SYLLABI[flashState.subj].code}.</div><button class="btn hot" onclick="openFlashAdd()">+ new card</button></div>`;
+    return;
+  }
+
+  if(flashState.mode === 'review'){
+    if(flashState.idx >= cards.length){
+      $('#flash-content').innerHTML = `<div class="empty"><div class="big">review complete</div><div class="sm">${cards.length} card${cards.length>1?'s':''} reviewed.</div><button class="btn hot" onclick="flashState.mode='browse';renderFlash()">browse all</button></div>`;
+      bumpStreak();
+      return;
+    }
+    const card = cards[flashState.idx];
+    $('#flash-content').innerHTML = `
+      <div class="fc-wrap" id="fc-card">
+        <div class="fc-side">${flashState.flipped?'back':'front'}</div>
+        <div class="fc-content">${escapeHTML(flashState.flipped ? card.back : card.front)}</div>
+        <div class="fc-progress">card ${flashState.idx+1} / ${cards.length}</div>
+        <div class="fc-ctrl">
+          ${flashState.flipped ? `
+            <button class="btn ghost" onclick="flashGrade('hard')">again (hard)</button>
+            <button class="btn cy" onclick="flashGrade('good')">good</button>
+            <button class="btn hot" onclick="flashGrade('easy')">easy</button>
+          ` : `<button class="btn hot" onclick="flashState.flipped=true;renderFlash()">flip ↻</button>`}
+        </div>
+      </div>
+    `;
+    $('#fc-card').onclick = (e) => { if(e.target.tagName!=='BUTTON') flashState.flipped = !flashState.flipped, renderFlash(); };
+  } else {
+    // browse
+    $('#flash-content').innerHTML = `<div class="grid-2">${cards.map((c,i)=>`
+      <div class="card">
+        <span class="card-tag">// card ${i+1}</span>
+        <p style="margin-top:8px;font-size:13px"><b>front:</b> ${escapeHTML(c.front)}</p>
+        <p style="font-size:13px"><b>back:</b> ${escapeHTML(c.back)}</p>
+        <div class="row" style="margin-top:8px"><button class="btn xs" onclick="editFlash(${i})">edit</button><button class="btn xs danger" onclick="deleteFlash(${i})">delete</button></div>
+      </div>
+    `).join('')}</div>`;
+  }
+}
+
+function flashGrade(grade){
+  const cards = getSubjState(flashState.subj).flashcards;
+  const card = cards[flashState.idx];
+  // simple box bumping
+  card.box = card.box || 1;
+  if(grade === 'easy') card.box = Math.min(5, card.box + 2);
+  else if(grade === 'good') card.box = Math.min(5, card.box + 1);
+  else card.box = 1;
+  save();
+  flashState.idx++;
+  flashState.flipped = false;
+  renderFlash();
+}
+window.flashGrade = flashGrade;
+
+function openFlashAdd(){
+  if(!flashState.subj){ toast('enroll in a subject first'); return; }
+  openModal(`
+    <h3>new flashcard</h3>
+    <div class="field"><label>front</label><textarea id="fa-front" placeholder="question / term"></textarea></div>
+    <div class="field"><label>back</label><textarea id="fa-back" placeholder="answer / definition"></textarea></div>
+    <div class="row"><button class="btn hot" id="fa-save">save</button><button class="btn ghost" onclick="closeModal()">cancel</button></div>
+  `);
+  $('#fa-save').onclick = () => {
+    const front = $('#fa-front').value.trim();
+    const back = $('#fa-back').value.trim();
+    if(!front || !back){ toast('both sides required'); return; }
+    getSubjState(flashState.subj).flashcards.push({ front, back, box: 1, created: nowIso() });
+    save();
+    closeModal();
+    renderFlash();
+    toast('card added');
+  };
+}
+window.openFlashAdd = openFlashAdd;
+
+function editFlash(i){
+  const c = getSubjState(flashState.subj).flashcards[i];
+  openModal(`
+    <h3>edit card</h3>
+    <div class="field"><label>front</label><textarea id="fe-front">${escapeHTML(c.front)}</textarea></div>
+    <div class="field"><label>back</label><textarea id="fe-back">${escapeHTML(c.back)}</textarea></div>
+    <div class="row"><button class="btn hot" id="fe-save">save</button><button class="btn ghost" onclick="closeModal()">cancel</button></div>
+  `);
+  $('#fe-save').onclick = ()=>{
+    c.front = $('#fe-front').value;
+    c.back = $('#fe-back').value;
+    save(); closeModal(); renderFlash();
+  };
+}
+window.editFlash = editFlash;
+
+function deleteFlash(i){
+  if(!confirm('delete?')) return;
+  getSubjState(flashState.subj).flashcards.splice(i,1);
+  save();
+  renderFlash();
+}
+window.deleteFlash = deleteFlash;
+
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function renderCfg(){
+  const p = P();
+  $('#cfg-key').value = p.apiKey;
+  $('#cfg-model').value = p.model;
+  $('#cfg-deadline').value = p.deadline;
+  $('#cfg-exam').value = p.examDate;
+  $('#cfg-hours').value = p.dailyHours;
+  $('#cfg-name').value = p.name;
+  $('#cfg-avatar').value = p.avatar;
+  $('#cfg-license').value = p.license;
+  $('#cfg-sysprompt').value = p.sysPromptExtra;
+  $('#cfg-license-status').textContent = p.license ? `licensed (key: ...${p.license.slice(-6)})` : 'unlicensed (offline mode unrestricted)';
+
+  $$('#theme-seg button').forEach(b => b.classList.toggle('on', b.dataset.theme === p.theme));
+  $$('#dir-seg button').forEach(b => b.classList.toggle('on', b.dataset.dir === p.dir));
+
+  $('#cfg-save').onclick = async () => {
+    p.apiKey = $('#cfg-key').value.trim();
+    p.model = $('#cfg-model').value;
+    save();
+    if(p.apiKey){
+      try {
+        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method:'POST',
+          headers:{ 'Authorization':'Bearer '+p.apiKey, 'Content-Type':'application/json' },
+          body: JSON.stringify({ model:p.model, messages:[{role:'user',content:'ping'}], max_tokens: 5 })
+        });
+        if(r.ok){ toast('groq connected'); $('#sb-ai-state').textContent = 'online'; $('#sb-ai-dot').classList.remove('off'); }
+        else toast('groq error ' + r.status, 3000, true);
+      } catch(e){ toast('connection failed', 3000, true); }
+    } else {
+      $('#sb-ai-state').textContent = 'offline'; $('#sb-ai-dot').classList.add('off');
+      toast('key cleared');
+    }
+  };
+
+  $('#cfg-save-sched').onclick = () => {
+    p.deadline = $('#cfg-deadline').value;
+    p.examDate = $('#cfg-exam').value;
+    p.dailyHours = parseFloat($('#cfg-hours').value) || 4;
+    save();
+    toast('schedule saved');
+    renderDash();
+  };
+
+  $('#cfg-profile-save').onclick = () => {
+    p.name = $('#cfg-name').value.trim() || 'operator';
+    p.avatar = ($('#cfg-avatar').value.trim() || p.name[0] || 'O').toUpperCase().slice(0,2);
+    save();
+    updateProfileChrome();
+    toast('profile updated');
+  };
+
+  $('#cfg-profile-new').onclick = openNewProfileModal;
+  $('#cfg-profile-del').onclick = () => {
+    if(!confirm('delete this profile? all data gone forever.')) return;
+    deleteProfile(STORE.currentProfile);
+  };
+
+  $('#cfg-license-save').onclick = () => {
+    p.license = $('#cfg-license').value.trim();
+    save();
+    renderCfg();
+    toast(p.license ? 'license applied' : 'license cleared');
+  };
+
+  $('#cfg-sysprompt-save').onclick = () => {
+    p.sysPromptExtra = $('#cfg-sysprompt').value;
+    save();
+    toast('system prompt saved');
+  };
+
+  $$('#theme-seg button').forEach(b => b.onclick = () => applyTheme(b.dataset.theme));
+  $$('#dir-seg button').forEach(b => b.onclick = () => applyDir(b.dataset.dir));
+
+  $('#data-export').onclick = () => exportData(false);
+  $('#data-export-enc').onclick = () => exportData(true);
+  $('#data-import').onclick = () => $('#data-file').click();
+  $('#data-file').onchange = importData;
+  $('#data-clear').onclick = () => {
+    if(!confirm('wipe this profile\'s data? cannot be undone.')) return;
+    const id = STORE.currentProfile;
+    const np = defaultProfile(P().name, P().avatar);
+    np.id = id;
+    np.onboarded = true;
+    STORE.profiles[id] = np;
+    save();
+    bootRender();
+    toast('profile wiped');
+  };
+}
+
+// ============================================================
+// PROFILE MODAL
+// ============================================================
+function openNewProfileModal(){
+  openModal(`
+    <h3>new profile</h3>
+    <div class="field"><label>name</label><input id="np-name" placeholder="e.g. partner"></div>
+    <div class="field"><label>avatar (1-2 chars)</label><input id="np-avatar" maxlength="2"></div>
+    <div class="row"><button class="btn hot" id="np-save">create</button><button class="btn ghost" onclick="closeModal()">cancel</button></div>
+  `);
+  $('#np-save').onclick = () => {
+    const name = $('#np-name').value.trim();
+    if(!name){ toast('name required'); return; }
+    const av = $('#np-avatar').value.trim() || name[0].toUpperCase();
+    const p = newProfile(name, av);
+    closeModal();
+    startOnboarding(true);
+  };
+}
+
+function openProfileSwitcher(){
+  const list = Object.values(STORE.profiles).map(p => `
+    <div class="wiz-subj-row ${p.id===STORE.currentProfile?'on':''}" data-id="${p.id}">
+      <div class="sb-avatar">${escapeHTML(p.avatar||'?')}</div>
+      <div class="wsr-name">${escapeHTML(p.name)}</div>
+      <div class="wsr-board">${Object.keys(p.subjects||{}).length} subj · ${p.streak?.count||0}d streak</div>
+    </div>
+  `).join('');
+  openModal(`
+    <h3>switch profile</h3>
+    <div class="wiz-subj-list" style="max-height:380px">${list}</div>
+    <div class="row" style="margin-top:14px"><button class="btn hot" onclick="closeModal();openNewProfileModal()">+ new profile</button><button class="btn ghost" onclick="closeModal()">cancel</button></div>
+  `);
+  $$('#modal .wiz-subj-row').forEach(r => r.onclick = () => {
+    switchProfile(r.dataset.id);
+    closeModal();
+  });
+}
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+function exportData(encrypted){
+  const data = JSON.stringify(STORE, null, 2);
+  if(!encrypted){
+    download('siege-backup-' + todayIso() + '.json', data, 'application/json');
+    toast('exported');
+    return;
+  }
+  const pw = prompt('encryption password (you\'ll need this to import):');
+  if(!pw) return;
+  encryptString(data, pw).then(enc => {
+    download('siege-backup-encrypted-' + todayIso() + '.json', JSON.stringify({ siege:true, encrypted:true, payload: enc }), 'application/json');
+    toast('encrypted export ready');
+  }).catch(e => toast('encryption failed', 3000, true));
+}
+
+function importData(e){
+  const f = e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = async () => {
+    try {
+      const obj = JSON.parse(r.result);
+      let raw;
+      if(obj.siege && obj.encrypted){
+        const pw = prompt('decryption password:');
+        if(!pw) return;
+        raw = await decryptString(obj.payload, pw);
+      } else {
+        raw = r.result;
+      }
+      const newStore = JSON.parse(raw);
+      if(!newStore.profiles){ throw new Error('not a siege backup'); }
+      if(!confirm('replace all current siege data?')) return;
+      STORE = newStore;
+      save();
+      bootRender();
+      toast('imported');
+    } catch(err){
+      toast('import failed: ' + err.message.slice(0,60), 3000, true);
+    }
+  };
+  r.readAsText(f);
+  e.target.value = '';
+}
+
+function download(name, content, type){
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+// AES-GCM via Web Crypto
+async function deriveKey(pw, salt){
+  const enc = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey('raw', enc.encode(pw), { name:'PBKDF2' }, false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt, iterations: 250000, hash:'SHA-256' },
+    baseKey, { name:'AES-GCM', length: 256 }, false, ['encrypt','decrypt']
+  );
+}
+async function encryptString(plain, pw){
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pw, salt);
+  const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, enc.encode(plain));
+  return {
+    salt: btoa(String.fromCharCode(...salt)),
+    iv: btoa(String.fromCharCode(...iv)),
+    ct: btoa(String.fromCharCode(...new Uint8Array(ct)))
+  };
+}
+async function decryptString(payload, pw){
+  const salt = Uint8Array.from(atob(payload.salt), c=>c.charCodeAt(0));
+  const iv = Uint8Array.from(atob(payload.iv), c=>c.charCodeAt(0));
+  const ct = Uint8Array.from(atob(payload.ct), c=>c.charCodeAt(0));
+  const key = await deriveKey(pw, salt);
+  const pt = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, ct);
+  return new TextDecoder().decode(pt);
+}
+
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(html, wide=false){
+  $('#modal').classList.toggle('wide', wide);
+  $('#modal-body').innerHTML = html;
+  $('#modal-bg').classList.add('show');
+}
+function closeModal(){
+  $('#modal-bg').classList.remove('show');
+  $('#modal-body').innerHTML = '';
+}
+window.openModal = openModal;
+window.closeModal = closeModal;
+
+// ============================================================
+// COMMAND PALETTE
+// ============================================================
+const COMMANDS = [
+  { label:'jump to dashboard', tag:'nav', fn:()=>go('dash') },
+  { label:'jump to subjects', tag:'nav', fn:()=>go('subj') },
+  { label:'jump to past papers', tag:'nav', fn:()=>go('papers') },
+  { label:'jump to siege.ai', tag:'nav', fn:()=>go('ai') },
+  { label:'jump to pomodoro', tag:'nav', fn:()=>go('pomo') },
+  { label:'jump to stats', tag:'nav', fn:()=>go('stats') },
+  { label:'jump to mistakes', tag:'nav', fn:()=>go('mistakes') },
+  { label:'jump to notes', tag:'nav', fn:()=>go('notes') },
+  { label:'jump to flashcards', tag:'nav', fn:()=>go('flash') },
+  { label:'jump to settings', tag:'nav', fn:()=>go('cfg') },
+  { label:'jump to help', tag:'nav', fn:()=>go('help') },
+  { label:'generate today\'s mission', tag:'action', fn:()=>{ go('dash'); generateMission(); } },
+  { label:'log a mistake', tag:'action', fn:()=>{ go('mistakes'); openMistakeModal(); } },
+  { label:'add a flashcard', tag:'action', fn:()=>{ go('flash'); openFlashAdd(); } },
+  { label:'add a subject', tag:'action', fn:()=>{ go('subj'); openSubjPicker(); } },
+  { label:'start pomodoro', tag:'action', fn:()=>{ go('pomo'); setTimeout(pomoStart,200); } },
+  { label:'switch profile', tag:'profile', fn:openProfileSwitcher },
+  { label:'new profile', tag:'profile', fn:openNewProfileModal },
+  { label:'export data (plain)', tag:'data', fn:()=>exportData(false) },
+  { label:'export data (encrypted)', tag:'data', fn:()=>exportData(true) },
+  { label:'theme: brutalist red', tag:'theme', fn:()=>applyTheme('red') },
+  { label:'theme: terminal green', tag:'theme', fn:()=>applyTheme('green') },
+  { label:'theme: mono white', tag:'theme', fn:()=>applyTheme('mono') },
+  { label:'direction: ltr', tag:'lang', fn:()=>applyDir('ltr') },
+  { label:'direction: rtl (arabic)', tag:'lang', fn:()=>applyDir('rtl') },
+  { label:'print weekly plan', tag:'action', fn:()=>window.print() },
+  { label:'restart onboarding', tag:'action', fn:()=>startOnboarding(true) },
+  { label:'help / faq', tag:'nav', fn:()=>go('help') },
+];
+
+let cmdSel = 0;
+let cmdFiltered = [];
+
+function openCmd(){
+  $('#cmd-bg').classList.add('show');
+  $('#cmd-input').value = '';
+  cmdSel = 0;
+  renderCmd('');
+  setTimeout(()=>$('#cmd-input').focus(), 50);
+}
+function closeCmd(){ $('#cmd-bg').classList.remove('show'); }
+
+function renderCmd(q){
+  const ql = q.toLowerCase();
+  cmdFiltered = COMMANDS.filter(c => c.label.toLowerCase().includes(ql) || c.tag.includes(ql));
+  if(cmdFiltered.length === 0){
+    $('#cmd-results').innerHTML = '<div class="cmd-empty">no commands match</div>';
+    return;
+  }
+  $('#cmd-results').innerHTML = cmdFiltered.map((c,i)=>`<div class="cmd-result ${i===cmdSel?'sel':''}" data-i="${i}"><div class="cmd-result-l">${escapeHTML(c.label)}</div><div class="cmd-result-r">${c.tag}</div></div>`).join('');
+  $$('.cmd-result').forEach(r => r.onclick = () => { runCmd(parseInt(r.dataset.i)); });
+}
+
+function runCmd(i){
+  const c = cmdFiltered[i];
+  if(c){ closeCmd(); setTimeout(()=>c.fn(), 50); }
+}
+
+// ============================================================
+// KEYBOARD SHORTCUTS
+// ============================================================
+let lastKey = '';
+let lastKeyTime = 0;
+function handleKey(e){
+  const target = e.target;
+  const inField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+  if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){
+    e.preventDefault(); openCmd(); return;
+  }
+  if(e.key === 'Escape'){
+    closeModal(); closeCmd();
+    return;
+  }
+  if(inField) return;
+
+  // sequential shortcuts
+  const now = Date.now();
+  if(now - lastKeyTime > 1200) lastKey = '';
+  const combo = lastKey + e.key.toLowerCase();
+  lastKey = e.key.toLowerCase();
+  lastKeyTime = now;
+
+  const map = {
+    'gd':()=>go('dash'),'ga':()=>go('ai'),'gp':()=>go('papers'),'gs':()=>go('stats'),
+    'gf':()=>go('flash'),'gn':()=>go('notes'),'gm':()=>go('mistakes'),'gc':()=>go('cfg'),
+    'gh':()=>go('help'),'go':()=>go('pomo'),'gj':()=>go('subj'),
+    'nm':()=>{ go('dash'); generateMission(); },
+    'nf':openFlashAdd,
+    '?':()=>go('help'),
+    '/':()=>openCmd(),
+  };
+  if(map[combo]){ e.preventDefault(); map[combo](); lastKey = ''; }
+  else if(map[e.key]){ e.preventDefault(); map[e.key](); }
+}
+
+// ============================================================
+// BOOTSTRAP & UI WIRING
+// ============================================================
+function updateProfileChrome(){
+  const p = P();
+  $('#sb-avatar').textContent = p.avatar || '?';
+  $('#sb-pn-name').textContent = p.name || 'no profile';
+  $('#sb-pn-meta').textContent = (enrolledSubjects().length + ' subjects · ' + (p.streak?.count||0) + 'd streak').toLowerCase();
+  $('#sb-streak').textContent = (p.streak?.count||0) + 'd';
+  $('#sb-ai-state').textContent = p.apiKey ? 'online' : 'offline';
+  $('#sb-ai-dot').classList.toggle('off', !p.apiKey);
+}
+
+function bootRender(){
+  const p = P();
+  applyTheme(p.theme || 'red');
+  applyDir(p.dir || 'ltr');
+  updateProfileChrome();
+  renderDash();
+  // re-render whatever tab is active
+  const active = $('.sb-item.active');
+  if(active) go(active.dataset.tab);
+}
+
+function wireEvents(){
+  // nav clicks
+  $$('.sb-item').forEach(b => b.addEventListener('click', ()=> go(b.dataset.tab)));
+  // profile switcher
+  $('#sb-profile').addEventListener('click', openProfileSwitcher);
+  // mobile nav
+  $('#mobile-nav-btn').addEventListener('click', ()=>{
+    $('#sidebar').classList.toggle('open');
+    $('#sb-backdrop').classList.toggle('show');
+  });
+  $('#sb-backdrop').addEventListener('click', ()=>{
+    $('#sidebar').classList.remove('open');
+    $('#sb-backdrop').classList.remove('show');
+  });
+  // modal close
+  $('#modal-close').addEventListener('click', closeModal);
+  $('#modal-bg').addEventListener('click', e => { if(e.target.id==='modal-bg') closeModal(); });
+  // command palette
+  $('#cmd-bg').addEventListener('click', e => { if(e.target.id==='cmd-bg') closeCmd(); });
+  $('#cmd-input').addEventListener('input', e => { cmdSel = 0; renderCmd(e.target.value); });
+  $('#cmd-input').addEventListener('keydown', e => {
+    if(e.key === 'ArrowDown'){ e.preventDefault(); cmdSel = Math.min(cmdFiltered.length - 1, cmdSel + 1); renderCmd($('#cmd-input').value); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); cmdSel = Math.max(0, cmdSel - 1); renderCmd($('#cmd-input').value); }
+    else if(e.key === 'Enter'){ e.preventDefault(); runCmd(cmdSel); }
+  });
+  // wizard
+  $('#wiz-next').addEventListener('click', wizNext);
+  $('#wiz-back').addEventListener('click', wizBack);
+  $('#wiz-skip').addEventListener('click', wizSkip);
+  // dashboard
+  $('#gen-mission').addEventListener('click', generateMission);
+  $('#show-progress').addEventListener('click', ()=> {
+    const lines = [];
+    enrolledSubjects().forEach(c=>{
+      const s = SYLLABI[c]; const st = getSubjState(c);
+      const done = s.topics.filter((_,i)=>(st.topicProgress[i]||0)===2).length;
+      lines.push(['> '+s.code+' '+s.name+' : '+done+'/'+s.topics.length+' topics · '+st.papers.length+' papers logged','ok']);
+    });
+    const p = P();
+    lines.push(['> streak: '+(p.streak?.count||0)+' days','dim']);
+    lines.push(['> deadline: '+p.deadline+' ('+Math.max(0,daysBetween(todayIso(),p.deadline))+' days left)','dim']);
+    termLog(lines, true);
+  });
+  // subjects
+  $('#subj-add').addEventListener('click', openSubjPicker);
+  $('#subj-remove').addEventListener('click', ()=>{
+    if(!subjActive) return;
+    if(!confirm('remove '+SYLLABI[subjActive].code+' from this profile? all topic progress, paper logs, notes, mistakes and flashcards for this subject will be deleted.')) return;
+    delete P().subjects[subjActive];
+    delete P().subjectStrength[subjActive];
+    save();
+    subjActive = enrolledSubjects()[0] || '';
+    renderSubjects();
+    toast('removed');
+  });
+  $('#subj-picker').addEventListener('change', e => { subjActive = e.target.value; renderSubjDetail(); });
+  // keyboard
+  document.addEventListener('keydown', handleKey);
+  // print
+  window.addEventListener('beforeprint', ()=> go('dash'));
+}
+
+// boot
+loadStore();
+wireEvents();
+if(!P().onboarded){
+  startOnboarding();
+} else {
+  bootRender();
+}
+// soft countdown refresh
+setInterval(()=>{ if($('.sb-item.active')?.dataset.tab === 'dash') updateCountdown(); }, 60000);
+// auto-rerender dash greeting on hour change
+setInterval(()=>{ if($('.sb-item.active')?.dataset.tab === 'dash') $('#hero-title').textContent = greet(); }, 60*60*1000);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+/* ===== MODULE 03: Decay — SYSTEM FAILURE critical overlay ===== */
+
+.decay-critical {
+  border-color: var(--red);
+  text-align: center;
+  width: min(720px, 92vw);
+}
+
+.decay-failure-title {
+  font-family: var(--f-disp);
+  font-weight: 800;
+  font-size: clamp(48px, 8vw, 88px);
+  letter-spacing: .06em;
+  line-height: 1;
+  color: var(--red);
+  text-transform: uppercase;
+  margin: 10px 0 8px;
+}
+
+.decay-failure-sub {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: .22em;
+  color: var(--white);
+  text-transform: uppercase;
+  margin-bottom: 22px;
+}
+
+.decay-crit-list {
+  max-width: 520px;
+  margin: 0 auto 18px;
+}
+
+.decay-crit-row {
+  border: 1px solid var(--red-deep);
+  background: #070000;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.decay-crit-name {
+  font-family: var(--f-disp);
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: .3em;
+  color: var(--white);
+  text-transform: uppercase;
+}
+
+.decay-crit-hours {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  color: var(--red);
+}
+
+.decay-crit-btn {
+  width: 100%;
+}
+
+.decay-failure-foot {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .18em;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin-top: 6px;
+}

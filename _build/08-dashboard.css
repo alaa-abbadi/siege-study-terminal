@@ -1,0 +1,132 @@
+/* ===== MODULE 08: Dashboard styles (all selectors .dash- prefixed) ===== */
+
+/* top status strip */
+.dash-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dim);
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 5px 10px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+.dash-top b { color: var(--gold); font-weight: 600; }
+.dash-top-alert { color: var(--red); }
+
+/* domain health rows */
+.dash-domains { display: flex; flex-direction: column; gap: 3px; }
+.dash-row {
+  display: grid;
+  grid-template-columns: 20px 86px minmax(120px, 1fr) 34px 78px 168px 16px;
+  gap: 10px;
+  align-items: center;
+  padding: 2px 0;
+}
+.dash-sym {
+  font-size: 13px;
+  text-align: center;
+  filter: grayscale(1) brightness(1.2);
+}
+.dash-name {
+  font-family: var(--f-disp);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .14em;
+  color: var(--txt);
+}
+.dash-bar { align-self: center; }
+.dash-health {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--white);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.dash-meta {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  color: var(--dim);
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+.dash-trend { font-family: var(--f-mono); font-size: 12px; text-align: center; }
+
+/* locked domain rows: banner + recovery button stay live, row content greyed */
+.dash-lockwrap {
+  border: 1px solid var(--red-deep);
+  padding: 4px 6px 2px;
+  margin: 2px 0;
+}
+.dash-lockhead {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin-bottom: 4px;
+}
+.dash-lockhead .locked-banner { flex: 1; margin-bottom: 0; }
+
+/* mission cards */
+.dash-missions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 6px;
+}
+.dash-mission {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 0;
+}
+.dash-mis-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.dash-mis-dom {
+  font-family: var(--f-disp);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: .12em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.dash-mis-tags { white-space: nowrap; }
+.dash-mis-obj {
+  color: var(--white);
+  font-size: 12px;
+  line-height: 1.45;
+  flex: 1;
+}
+.dash-mission.crit .dash-mis-obj { color: var(--red); }
+.dash-mission.ok .dash-mis-obj { color: var(--dim); }
+.dash-mis-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.dash-mis-dur {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: .1em;
+}
+
+/* briefing / patterns */
+.dash-pat-head { margin-top: 12px; margin-bottom: 4px; }
+.dash-patterns {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: .03em;
+}
+.dash-pat-line { color: var(--warn); }
+.dash-pat-line.clean { color: var(--dim); }

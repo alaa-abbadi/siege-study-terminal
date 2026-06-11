@@ -1,0 +1,31 @@
+/* ===== MODULE 05: Siege — extra styles (core siege classes live in 00-css.css) ===== */
+
+/* dim abandon button (sits next to SUBMIT PROOF) */
+.siege-abandon { color: var(--dim); border-color: var(--border); }
+.siege-abandon:hover:not([disabled]) { color: var(--red); border-color: var(--red-deep); background: transparent; }
+
+/* prepare phase */
+.siege-prep { margin-top: 28vh; text-align: center; }
+.siege-prep-line { font-family: var(--f-mono); font-size: 15px; letter-spacing: .35em; color: var(--green); margin-top: 16px; text-transform: uppercase; }
+.siege-prep-sub { font-family: var(--f-mono); font-size: 10px; letter-spacing: .2em; color: var(--dim); margin-top: 8px; text-transform: uppercase; }
+
+/* focus lock */
+.siege-lock-line { font-family: var(--f-mono); font-size: 12px; letter-spacing: .3em; color: var(--dim); text-transform: uppercase; margin: 18px 0 12vh; }
+
+/* status line states */
+.siege-status.siege-err { color: var(--red); }
+.siege-status.siege-ok { color: var(--green); }
+
+/* failed-siege frame: static deep red */
+.siege-frame.siege-fail { animation: none; border-color: var(--red-deep); }
+
+/* post-siege panel */
+.siege-panel { width: min(680px, 92vw); margin: 14vh 0 40px; border: 1px solid var(--gold-dim); background: #020202; padding: 22px 26px; }
+.siege-panel-fail { border-color: var(--red-deep); }
+.siege-panel-title { font-family: var(--f-disp); font-weight: 800; font-size: 22px; letter-spacing: .18em; color: var(--gold); text-transform: uppercase; }
+.siege-panel-fail .siege-panel-title { color: var(--red); }
+.siege-panel .siege-domain { margin: 6px 0 10px; }
+.siege-panel-health { font-family: var(--f-mono); font-size: 16px; letter-spacing: .08em; color: var(--green); margin: 12px 0 4px; }
+.siege-panel-nohealth { color: var(--red); }
+.siege-panel-reason { font-family: var(--f-mono); font-size: 11px; letter-spacing: .04em; color: var(--txt); margin: 6px 0; text-transform: uppercase; }
+.siege-panel-summary { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 10px; font-size: 12px; }

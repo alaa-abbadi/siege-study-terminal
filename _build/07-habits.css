@@ -1,0 +1,78 @@
+/* ===== MODULE 07: Habits — chain rows, controls, dashboard card ===== */
+
+/* ---------- habits view: legend ---------- */
+.hab-legend {
+  display:flex; gap:16px; align-items:center;
+  font-family:var(--f-mono); font-size:9px; color:var(--dim);
+  letter-spacing:.1em; text-transform:uppercase;
+  margin-bottom:10px;
+}
+.hab-legend > span { display:flex; align-items:center; gap:5px; }
+
+/* ---------- habits view: rows ---------- */
+.hab-row {
+  border:1px solid var(--border); background:var(--panel);
+  padding:8px 10px; margin-bottom:6px;
+}
+.hab-head {
+  display:flex; align-items:center; gap:12px;
+  margin-bottom:6px; flex-wrap:wrap;
+}
+.hab-name {
+  font-family:var(--f-disp); font-weight:800; font-size:11px;
+  letter-spacing:.16em; color:var(--gold); text-transform:uppercase;
+  min-width:118px;
+}
+.hab-streak {
+  font-family:var(--f-mono); font-size:10px; color:var(--dim);
+  letter-spacing:.08em; font-variant-numeric:tabular-nums;
+}
+.hab-streak b { color:var(--white); font-family:var(--f-mono); font-weight:600; }
+.hab-ctl {
+  margin-left:auto; display:flex; gap:6px; align-items:center;
+  flex-wrap:wrap; justify-content:flex-end;
+}
+.hab-chain { display:flex; gap:2px; overflow-x:auto; padding-bottom:2px; }
+.hab-chain .cell { flex:0 0 auto; }
+
+/* ---------- controls ---------- */
+.hab-num { width:70px; }
+.hab-time { width:72px; }
+.hab-note {
+  font-family:var(--f-mono); font-size:9px; color:var(--dim);
+  letter-spacing:.08em; text-transform:uppercase;
+}
+.hab-reason {
+  font-family:var(--f-mono); font-size:9px; color:var(--red);
+  letter-spacing:.08em; text-transform:uppercase;
+}
+.hab-water { font-family:var(--f-mono); font-size:11px; color:var(--txt); }
+.hab-water.hit { color:var(--gold); }
+
+.hab-pray {
+  font-family:var(--f-mono); font-size:8px; letter-spacing:.05em;
+  color:var(--dim); background:#050505; border:1px solid var(--border);
+  padding:3px 5px; cursor:pointer; text-transform:uppercase;
+}
+.hab-pray:hover { border-color:var(--gold-dim); color:var(--txt); }
+.hab-pray.on { background:var(--gold); color:#000; border-color:var(--gold); }
+
+/* ---------- dashboard card ---------- */
+.hab-card { display:flex; flex-direction:column; gap:2px; }
+.hab-tc {
+  display:flex; align-items:center; gap:8px;
+  font-family:var(--f-mono); font-size:10px;
+  padding:2px 4px; border:1px solid transparent;
+}
+.hab-tc.click { cursor:pointer; }
+.hab-tc.click:hover { border-color:var(--border); background:#0a0a0a; }
+.hab-dot { width:8px; height:8px; background:#0c0c0c; border:1px solid #222; flex:0 0 auto; }
+.hab-dot.on { background:var(--gold); border-color:var(--gold); }
+.hab-tc-abbr { color:var(--dim); letter-spacing:.12em; width:38px; flex:0 0 auto; }
+.hab-tc-val { color:var(--txt); font-variant-numeric:tabular-nums; }
+.hab-tc-val.miss { color:var(--red); }
+.hab-tc-hint {
+  margin-left:auto; color:var(--gold-dim); font-size:9px;
+  letter-spacing:.1em; text-transform:uppercase;
+}
+.hab-tc.click:hover .hab-tc-hint { color:var(--gold); }
