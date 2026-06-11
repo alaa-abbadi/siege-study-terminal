@@ -1479,15 +1479,12 @@ a:hover{color:var(--accent)}
     <div class="meta">full pressure simulator</div>
   </div>
   <div class="card" style="text-align:center; padding: 40px 20px;">
-    <h3 style="color:var(--accent); margin-bottom: 8px;">// INITIATE EXAM CONDITIONS</h3>
-    <p style="color:var(--muted); font-size: 13px; max-width: 400px; margin: 0 auto 24px;">Select a past paper from the vault and enter full-screen lockdown mode. Time tracking, distraction blocking, and MS locking are enforced.</p>
+    <h3 style="color:var(--accent); margin-bottom: 8px;">// AI-GENERATED CUSTOM MOCK</h3>
+    <p style="color:var(--muted); font-size: 13px; max-width: 400px; margin: 0 auto 24px;">The AI will synthesize a custom mock exam based on your Study Log, Notes, and weak topics. You cannot choose what is on the exam. You will be tested on what you need to know.</p>
     
-    <div style="display:flex; gap:12px; justify-content:center; max-width:500px; margin:0 auto;">
-      <select id="mock-paper-select" style="background:var(--bg);border:1px solid var(--dim);color:var(--ink);padding:8px;flex:1;"></select>
-      <input type="number" id="mock-duration" placeholder="mins" value="90" style="width:70px;background:var(--bg);border:1px solid var(--dim);color:var(--ink);padding:8px; text-align:center;">
-    </div>
+    <div id="mock-exam-output" style="text-align:left; max-width: 700px; margin: 0 auto 24px; padding: 16px; background: #050505; border: 1px solid var(--dim); display: none; font-size:13px; white-space:pre-wrap; max-height:400px; overflow-y:auto; color: var(--ink);"></div>
     
-    <button class="btn hot" onclick="appAction('start_mock')" style="margin-top: 24px; font-size: 16px; padding: 12px 24px;">[ START SIMULATION ]</button>
+    <button class="btn hot" onclick="generateAIMockExam()" style="margin-top: 12px; font-size: 16px; padding: 12px 24px;">[ GENERATE AI EXAM ]</button>
   </div>
   <div class="spacer"></div>
   <div class="grid-2">
@@ -7419,6 +7416,28 @@ function runAIPipeline(action) {
     rawLog('<span style="color:var(--cy)">[SYSTEM] Querying historical examiner reports...</span><br><br>');
     groqStream(`The student made this mistake: "${input}". Act as the Principal Examiner. Write a simulated 'Examiner Report' excerpt explaining why candidates typically make this error, the percentage of students who fall for it, and the precise rule to remember. Use formal Cambridge examiner tone.`, log);
   }
+function generateAIMockExam() {
+  const p = P();
+  const out = document.getElementById('mock-exam-output');
+  if(!out) return;
+  out.style.display = 'block';
+  out.innerHTML = '<span style="color:var(--cy)">[SYSTEM] Analyzing syllabus progress and mistake history to synthesize custom exam...</span><br><br>';
+  
+  let userLogData = 'Mistakes/Study History: ' + JSON.stringify(p.studyLog.slice(-10));
+  if(p.notes && Object.keys(p.notes).length > 0) {
+    userLogData += '\\nNotes context: ' + JSON.stringify(Object.values(p.notes).map(n=>n.text).join('\\n').slice(0,800));
+  }
+
+  const sys = 'You are a rigorous Cambridge examiner. Generate a custom 3-question mock exam (1 short, 1 medium, 1 hard extended response) based EXACTLY on the student\\'s logged study history and notes. Output ONLY the questions, followed by a separate grading rubric block. Format using brutalist terminal style.';
+
+  groqTask(sys, userLogData, (chunk) => {
+    out.innerHTML += escapeHTML(chunk).replace(/\\n/g, '<br>');
+    out.scrollTop = out.scrollHeight;
+  }, () => {
+    out.innerHTML += '<br><br><span style="color:var(--ok)">[ EXAM READY. ]</span>';
+    out.innerHTML += `<br><button class="btn hot" style="margin-top:12px" onclick="appAction('timer_overlay')">[ START TIMED LOCKDOWN ]</button>`;
+    out.scrollTop = out.scrollHeight;
+  });
 }
 
 </script>
