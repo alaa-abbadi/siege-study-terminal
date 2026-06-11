@@ -1,0 +1,30 @@
+127.0.0.1 - - [11/Jun/2026 14:34:09] "GET /siege.html HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:34:09] code 404, message File not found
+127.0.0.1 - - [11/Jun/2026 14:34:09] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [11/Jun/2026 14:34:51] "GET /siege.html HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:34:52] code 404, message File not found
+127.0.0.1 - - [11/Jun/2026 14:34:52] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [11/Jun/2026 14:34:54] "GET /siege.html HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:34:54] code 404, message File not found
+127.0.0.1 - - [11/Jun/2026 14:34:54] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [11/Jun/2026 14:34:55] "GET /siege.html HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:34:56] code 404, message File not found
+127.0.0.1 - - [11/Jun/2026 14:34:56] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [11/Jun/2026 14:39:00] "GET /api/papers HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:39:00] "GET /api/obsidian/tasks HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:39:40] "GET /siege.html HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:39:40] "GET /api/papers HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:39:40] "GET /api/obsidian/tasks HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:39:40] code 404, message File not found
+127.0.0.1 - - [11/Jun/2026 14:39:40] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [11/Jun/2026 14:39:52] "GET /siege.html HTTP/1.1" 304 -
+127.0.0.1 - - [11/Jun/2026 14:39:53] "GET /api/papers HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:39:53] "GET /api/obsidian/tasks HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:41:17] "GET /api/papers HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:41:17] "GET /api/obsidian/tasks HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:41:24] "POST /api/obsidian/update_task HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:41:24] "GET /api/obsidian/tasks HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:41:25] "POST /api/obsidian/update_task HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:41:25] "GET /api/obsidian/tasks HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:41:25] "POST /api/obsidian/update_task HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 14:41:25] "GET /api/obsidian/tasks HTTP/1.1" 200 -
