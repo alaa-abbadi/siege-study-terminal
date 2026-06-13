@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SIEGE — The Operator's Field Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#13201a; --soft:#48564f; --accent:#0c8f4e; --deep:#0a3a26;
+    --line:#d9e4dd; --panel:#f3f8f5; --panel2:#eaf3ed; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body{ font-family:'Source Serif 4',Georgia,serif; color:var(--ink); font-size:11.5pt; line-height:1.5; }
+  @page{ size:A4; margin:0; }
+  .page{
+    width:210mm; min-height:297mm; padding:20mm 18mm 16mm; position:relative;
+    page-break-after:always; overflow:hidden;
+  }
+  .page:last-child{ page-break-after:auto; }
+  /* page furniture */
+  .ph{ display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:8pt; letter-spacing:.12em; text-transform:uppercase; color:var(--soft); border-bottom:1px solid var(--line); padding-bottom:6px; margin-bottom:18px; }
+  .ph .tag{ color:var(--accent); font-weight:600; }
+  .pn{ position:absolute; bottom:10mm; right:18mm; font-family:var(--mono); font-size:8pt; color:var(--soft); }
+  .foot{ position:absolute; bottom:10mm; left:18mm; font-family:var(--mono); font-size:8pt; color:var(--soft); }
+  h1{ font-size:34pt; line-height:1.05; font-weight:700; letter-spacing:-.01em; }
+  h2{ font-size:18pt; font-weight:700; color:var(--deep); margin-bottom:4px; letter-spacing:-.01em; }
+  h2 .num{ font-family:var(--mono); font-size:11pt; color:var(--accent); margin-right:8px; }
+  h3{ font-size:12.5pt; font-weight:700; color:var(--ink); margin:14px 0 4px; }
+  .lede{ font-size:12.5pt; color:var(--soft); margin-bottom:12px; font-style:italic; }
+  p{ margin-bottom:8px; }
+  ul,ol{ margin:6px 0 10px 20px; }
+  li{ margin-bottom:5px; }
+  code,.mono{ font-family:var(--mono); font-size:9.5pt; background:var(--panel2); padding:1px 5px; border-radius:3px; color:var(--deep); }
+  .accent{ color:var(--accent); font-weight:600; }
+  .rule{ height:3px; width:70px; background:var(--accent); margin:14px 0; border:none; }
+  table{ width:100%; border-collapse:collapse; margin:10px 0 12px; font-size:10pt; }
+  th{ background:var(--deep); color:#eafff3; text-align:left; padding:6px 9px; font-family:var(--mono); font-size:8.5pt; letter-spacing:.06em; text-transform:uppercase; }
+  td{ padding:6px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:nth-child(even) td{ background:var(--panel); }
+  .callout{ background:var(--panel); border-left:4px solid var(--accent); padding:11px 14px; margin:12px 0; border-radius:0 5px 5px 0; }
+  .callout .k{ font-family:var(--mono); font-size:8pt; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); display:block; margin-bottom:3px; }
+  .grid2{ display:flex; gap:14px; }
+  .grid2 > div{ flex:1; }
+  .pill{ font-family:var(--mono); font-size:8.5pt; background:var(--accent); color:#fff; padding:2px 8px; border-radius:20px; display:inline-block; }
+  /* cover */
+  .cover{ background:var(--deep); color:#eafff3; display:flex; flex-direction:column; justify-content:center; }
+  .cover h1{ color:#fff; }
+  .cover .sub{ font-size:14pt; color:#7fe0ab; margin-top:14px; max-width:150mm; line-height:1.4; }
+  .cover .mark{ font-family:var(--mono); font-size:9pt; letter-spacing:.3em; color:#5cc98c; text-transform:uppercase; }
+  .cover .meta{ font-family:var(--mono); font-size:9pt; color:#9fe7bf; margin-top:40px; border-top:1px solid #1c5d3f; padding-top:14px; }
+  .cover .pn,.cover .foot{ color:#3f9468; }
+  .big-q{ font-size:15pt; line-height:1.45; color:var(--deep); font-weight:600; margin:6px 0 12px; }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1 — COVER ============ -->
+<section class="page cover">
+  <div class="mark">SIEGE // STUDY TERMINAL · CLASSIFIED OPERATIONS</div>
+  <h1>THE&nbsp;OPERATOR'S<br>FIELD&nbsp;MANUAL</h1>
+  <div class="sub">How to run the terminal at one hundred percent — and take the highest marks on the planet, on purpose, by system rather than by luck.</div>
+  <div class="meta">
+    OPERATOR: ____________________ &nbsp;&nbsp;|&nbsp;&nbsp; ISSUE 1.0 &nbsp;&nbsp;|&nbsp;&nbsp; CAIE / EDEXCEL IGCSE &amp; A-LEVEL<br>
+    DOCTRINE: ACTIVE RECALL · SPACED REPETITION · INTERLEAVING · PAST-PAPER SUPREMACY · MARK-SCHEME FLUENCY
+  </div>
+  <div class="foot">SIEGE.AI</div>
+  <div class="pn">01</div>
+</section>
+
+<!-- ============ PAGE 2 — DOCTRINE ============ -->
+<section class="page">
+  <div class="ph"><span>The Operator's Field Manual</span><span class="tag">// 00 · DOCTRINE</span></div>
+  <h2><span class="num">00</span>The Doctrine: Marks Are a System</h2>
+  <div class="lede">The student who panics studies harder. The operator studies the exam.</div>
+  <p>Top marks are not a personality trait or a gift. They are the output of a <span class="accent">closed feedback loop</span>: do real questions → see exactly where you bleed marks → repair that precise gap → prove the repair on a fresh paper → repeat until the bleeding stops. SIEGE exists to run that loop faster than you could by hand, and to never let you lie to yourself about where you actually stand.</p>
+  <div class="rule"></div>
+  <h3>The five laws everything in this manual obeys</h3>
+  <table>
+    <tr><th style="width:34%">Law</th><th>Why it wins marks</th></tr>
+    <tr><td><b>1. Active recall &gt; re-reading</b></td><td>Pulling an answer out of your head (not recognising it on a page) is what the exam tests and what builds durable memory. Every SIEGE mode is built to make you <i>produce</i>, not passively review.</td></tr>
+    <tr><td><b>2. Spaced repetition</b></td><td>Memory decays on a curve. Reviewing just before you'd forget resets the curve higher for less effort. The flashcard boxes and the Decay Curve chart are this law made visible.</td></tr>
+    <tr><td><b>3. Past papers are the syllabus</b></td><td>Examiners reuse question shapes, traps, and mark-scheme wording. Drilling <i>real</i> papers teaches the actual game. SIEGE only ever indexes real CAIE/Edexcel codes — it never invents questions.</td></tr>
+    <tr><td><b>4. The mark scheme is the rulebook</b></td><td>Marks are awarded for specific words and structures, not vibes. You must learn to think like the marker. MARK SCHEME and COMMAND WORDS modes drill exactly this.</td></tr>
+    <tr><td><b>5. Measure or it didn't happen</b></td><td>What you don't log, you can't fix. Logging every score and every wrong question turns "I think I'm okay at this" into a number you can attack.</td></tr>
+  </table>
+  <div class="callout"><span class="k">The one-sentence strategy</span>Convert every weakness into a logged number, let the Analytics terminal rank those numbers by yield, and spend tomorrow on whatever sits at the top of that list — every day, until the exam.</div>
+  <p>The rest of this manual is just the machinery for executing those five laws without friction. Read it once end-to-end, then keep it on your iPad and re-read Page 10 every Sunday.</p>
+  <div class="foot">SIEGE.AI</div><div class="pn">02</div>
+</section>
+
+<!-- ============ PAGE 3 — SETUP ============ -->
+<section class="page">
+  <div class="ph"><span>The Operator's Field Manual</span><span class="tag">// 01 · ARM THE TERMINAL</span></div>
+  <h2><span class="num">01</span>Zero to Armed: First-Boot Setup</h2>
+  <div class="lede">Ten minutes of setup decides whether the next ten weeks compound or leak.</div>
+  <h3>Step 1 — Run the onboarding wizard honestly</h3>
+  <p>When you first launch SIEGE it walks you through your <span class="accent">operator profile</span>. The single most important screen is <b>subject strengths</b>: rate each subject by how you <i>actually</i> perform, not how you wish you did. The whole engine — missions, the mastery radar, the task screener — weights your time toward what you rate weak. Lie here and you'll study what's comfortable instead of what's failing.</p>
+  <h3>Step 2 — Set the clock</h3>
+  <ul>
+    <li><b>Exam session &amp; date</b> — e.g. <code>O/N 2026</code>. This drives the <span class="accent">Days-Left</span> counter and Burn-Risk maths.</li>
+    <li><b>Deadline</b> — your internal "ready by" date, ideally 2–3 weeks before the real paper so you have a repair buffer.</li>
+    <li><b>Daily hours</b> — be realistic; the mission generator sizes each day's plan to this budget.</li>
+  </ul>
+  <h3>Step 3 — Connect the brain (Groq API key)</h3>
+  <p>SIEGE's AI runs on Groq, which has a <span class="accent">free tier with no credit card</span>. Go to <code>console.groq.com/keys</code>, create a key, paste it into <b>Settings → groq api</b>, and hit <b>save &amp; test</b> until it says <i>groq connected</i>.</p>
+  <table>
+    <tr><th>Model</th><th>Use it for</th></tr>
+    <tr><td><code>gpt-oss-120b</code> (default)</td><td>Strongest reasoning — your everyday driver for explanations, mark schemes, planning.</td></tr>
+    <tr><td><code>llama-3.1-8b-instant</code></td><td>Fast, cheap, for quick lookups and high-volume flashcard generation.</td></tr>
+    <tr><td><code>llama-4-scout</code> (auto)</td><td>Vision. The moment you attach an <i>image</i> of a question, SIEGE auto-routes to this so OCR Solver works.</td></tr>
+  </table>
+  <div class="callout"><span class="k">Budget reality</span>On the free tier you can study for months without paying. If you ever hit the rate limit, add a card for the Developer tier — <b>$0 minimum</b>, 10× the limits, and a 25% discount — not a lump-sum prepay.</div>
+  <h3>Step 4 — Prove it works</h3>
+  <p>Open the AI panel in <b>PLAN</b> mode and type <i>"build me today's mission."</i> If a real plan comes back referencing real paper codes, the terminal is armed. You're ready.</p>
+  <div class="foot">SIEGE.AI</div><div class="pn">03</div>
+</section>
+
+<!-- ============ PAGE 4 — DAILY RHYTHM ============ -->
+<section class="page">
+  <div class="ph"><span>The Operator's Field Manual</span><span class="tag">// 02 · BATTLE RHYTHM</span></div>
+  <h2><span class="num">02</span>The Daily Battle Rhythm</h2>
+  <div class="lede">Champions don't have more willpower. They have a loop they don't have to decide on.</div>
+  <p>Open SIEGE the same way every day and follow the same five-beat loop. The point is to remove decisions — you should never sit down wondering "what do I study?" The terminal already knows.</p>
+  <table>
+    <tr><th style="width:18%">Beat</th><th style="width:30%">Where</th><th>What you do</th></tr>
+    <tr><td><b>1 · Brief</b></td><td>Dashboard / Mission</td><td>Read today's auto-generated mission. It already weights weak subjects and names specific real papers.</td></tr>
+    <tr><td><b>2 · Strike</b></td><td>Pomodoro</td><td>Run focus blocks. Each completed block <span class="accent">logs your minutes and feeds the streak</span> — this is how the analytics get fuel.</td></tr>
+    <tr><td><b>3 · Drill</b></td><td>Past Papers</td><td>Do a real paper (or a timed section). Use Timer Overlay + Blind Mode for exam realism.</td></tr>
+    <tr><td><b>4 · Log</b></td><td>Paper modal</td><td>Mark it, enter your score, and — non-negotiable — list every <b>wrong question number</b>. This is the gold.</td></tr>
+    <tr><td><b>5 · Lock in</b></td><td>Flashcards / Mistakes</td><td>Turn each mistake into a flashcard or a mistake-log entry so it returns at the right time.</td></tr>
+  </table>
+  <h3>A model study day (4-hour budget)</h3>
+  <table>
+    <tr><th>Block</th><th>Activity</th><th>Mode / tool</th></tr>
+    <tr><td>0:00–0:10</td><td>Brief + warm-up recall</td><td>Mission + due flashcards</td></tr>
+    <tr><td>0:10–1:00</td><td>Weak-topic teaching</td><td>EXPLAIN / CONCEPT TUTOR / SOCRATIC</td></tr>
+    <tr><td>1:00–2:15</td><td>Timed past-paper section</td><td>Past Papers + Timer Overlay</td></tr>
+    <tr><td>2:15–2:45</td><td>Mark &amp; interrogate errors</td><td>MARK SCHEME + ROAST ME</td></tr>
+    <tr><td>2:45–3:30</td><td>Repair the exact gaps</td><td>Topic search → targeted papers</td></tr>
+    <tr><td>3:30–4:00</td><td>Encode + review telemetry</td><td>Flashcards + Analytics</td></tr>
+  </table>
+  <div class="callout"><span class="k">The streak is not decoration</span>The streak/heatmap on the Analytics page is a commitment device. Protect it. A short logged session beats a heroic un-logged one, because only logged time becomes data the engine can act on.</div>
+  <div class="foot">SIEGE.AI</div><div class="pn">04</div>
+</section>
+
+<!-- ============ PAGE 5 — AI MODES ============ -->
+<section class="page">
+  <div class="ph"><span>The Operator's Field Manual</span><span class="tag">// 03 · THE 15 MODES</span></div>
+  <h2><span class="num">03</span>Weaponising the AI: All 15 Modes</h2>
+  <div class="lede">A generic chatbot answers questions. A mode-switched tutor runs a method.</div>
+  <p>Each tile on the AI screen loads a different specialist persona with its own system prompt. Pick the mode that matches the <i>job</i>, not just the subject.</p>
+  <table>
+    <tr><th style="width:26%">Mode</th><th>Fire it when…</th></tr>
+    <tr><td><b>PLAN</b></td><td>You need a study plan or want to add/remove tasks from today's mission by chat.</td></tr>
+    <tr><td><b>EXPLAIN</b></td><td>A concept won't click — paste it, get a clean breakdown.</td></tr>
+    <tr><td><b>MARK SCHEME</b></td><td>You've written an answer and want it graded like CAIE would, with mark-by-mark feedback.</td></tr>
+    <tr><td><b>WEAKNESS AUDIT</b></td><td>You want it to find what to fix next from your patterns.</td></tr>
+    <tr><td><b>RECOMMENDER</b></td><td>You're unsure which paper to attempt — get a targeted pick.</td></tr>
+    <tr><td><b>CONCEPT TUTOR</b></td><td>You want a full guided walk-through of one syllabus topic.</td></tr>
+    <tr><td><b>COMMAND WORDS</b></td><td>You lose marks on "explain vs describe vs evaluate." Drill the exact verbs.</td></tr>
+    <tr><td><b>SOCRATIC</b></td><td>You learn best by being asked, not told — it questions you to the answer.</td></tr>
+    <tr><td><b>CHEM 0620</b></td><td>Chemistry specialist: equations, moles, electrolysis, examiner traps.</td></tr>
+    <tr><td><b>TOPIC PREDICTOR</b></td><td>You want a pattern-based read on what's likely to appear this session.</td></tr>
+    <tr><td><b>OCR SOLVER</b></td><td>Upload a <i>photo</i> of a question — it reads and solves it (auto-uses the vision model).</td></tr>
+    <tr><td><b>ROAST ME</b></td><td>You want your answer torn apart so the real exam can't.</td></tr>
+    <tr><td><b>KEYWORD EXTRACT</b></td><td>Pull the mandatory mark-scheme keywords from a topic or answer.</td></tr>
+    <tr><td><b>DICTATE</b></td><td>Speak your answer instead of typing it.</td></tr>
+    <tr><td><b>EXAMINER DEBATE</b></td><td>Argue for partial marks — train yourself to justify every point.</td></tr>
+  </table>
+  <div class="callout"><span class="k">Power combo</span><b>MARK SCHEME → ROAST ME → KEYWORD EXTRACT</b> on the same answer: get the honest grade, get it brutally critiqued, then extract the exact words you missed and turn them into flashcards. That three-punch is how a 6/10 answer becomes a 9/10 by next week.</div>
+  <div class="foot">SIEGE.AI</div><div class="pn">05</div>
+</section>
+
+<!-- ============ PAGE 6 — PAST PAPERS ============ -->
+<section class="page">
+  <div class="ph"><span>The Operator's Field Manual</span><span class="tag">// 04 · PAPER WARFARE</span></div>
+  <h2><span class="num">04</span>Past-Paper Warfare</h2>
+  <div class="lede">The single highest-yield activity in existence. Everything else serves this.</div>
+  <p>The Past Papers section is a grid of <span class="accent">real, indexed</span> CAIE/Edexcel codes. Every card carries direct <code>qp</code> / <code>ms</code> / <code>sme</code> links. Click a card to open the <b>paper intel</b> panel.</p>
+  <h3>The paper-intel modal — your pre-flight check</h3>
+  <ul>
+    <li><b>Intel readout</b> — decoded component, marks, time, the real sitting (e.g. "Oct/Nov 2020"), variant/zone, and your status.</li>
+    <li><b>Open paper</b> — Question Paper / Mark Scheme links that go straight to the real PDF.</li>
+    <li><b>Log it</b> — set status, enter score/total, and list <b>wrong question numbers</b> + reflection notes. This is what powers your analytics.</li>
+  </ul>
+  <h3>✦ Ask AI for a topic</h3>
+  <p>Pick the subject first, then hit <span class="pill">✦ ask ai for topic</span> and name a precise topic ("electrolysis", "sound waves"). SIEGE asks an examiner-model which real papers most likely contain it, validates every code against the actual grid, and <b>filters the grid down to those papers</b> — each flagged with a likely question and reason. Treat results as a strong lead, not gospel: it's an examiner's best estimate, but every paper it shows is real and one click from the PDF.</p>
+  <h3>The tactical toolbar</h3>
+  <table>
+    <tr><th>Tool</th><th>What it does</th></tr>
+    <tr><td><b>Blind Mode</b></td><td>Hides answers/marks so you can't cheat yourself during a drill.</td></tr>
+    <tr><td><b>Timer Overlay</b></td><td>Real exam clock on screen — build time discipline.</td></tr>
+    <tr><td><b>MS Highlighter</b></td><td>Surfaces the mark-scheme keywords to internalise.</td></tr>
+    <tr><td><b>Curve Estimator</b></td><td>Projects your raw score onto grade boundaries.</td></tr>
+    <tr><td><b>Print Exam Booklet</b></td><td>Generate a clean printable set for offline drilling.</td></tr>
+    <tr><td><b>AI Forensics Pipeline</b></td><td>Drop a solved PDF: Auto-Grade, Predict Topics, Cognitive Replay, Syllabus Gaps, Examiner Report.</td></tr>
+  </table>
+  <div class="callout"><span class="k">Transfer to iPad</span>Because paper links are public PDFs, you never need the laptop's network. Copy the <code>qp</code> link into a self-chat (Telegram Saved Messages) or scan a QR — open on the iPad and import into your notes app. Batch a whole session's links in one message.</div>
+  <div class="foot">SIEGE.AI</div><div class="pn">06</div>
+</section>
+
+<!-- ============ PAGE 7 — ANALYTICS ============ -->
+<section class="page">
+  <div class="ph"><span>The Operator's Field Manual</span><span class="tag">// 05 · THE TELEMETRY</span></div>
+  <h2><span class="num">05</span>The Analytics Terminal: Read Your Own Telemetry</h2>
+  <div class="lede">Feelings lie. The dashboard doesn't. Every red number is a marked target.</div>
+  <p>The Analytics terminal computes everything live from your real logs. It shows <code>N/A</code> instead of faking numbers when there's no data — so the cure for an empty dashboard is always the same: <b>log more papers and study sessions.</b></p>
+  <table>
+    <tr><th style="width:30%">Metric</th><th>What it means → what to DO</th></tr>
+    <tr><td><b>A* Probability</b><br><span class="mono">monte carlo</span></td><td>Simulates 1,500 exam outcomes from the spread of your real paper scores vs the A* boundary. Low? Your <i>average</i> or your <i>consistency</i> is short — drill until both rise.</td></tr>
+    <tr><td><b>Subject Mastery Radar</b></td><td>Blended score (topic progress + recent paper average) per subject. Attack the shortest spoke first; that's where marks are cheapest.</td></tr>
+    <tr><td><b>Task Screener</b></td><td>Your oracle. Ranks every weak topic by <span class="accent">yield = (1 − mastery) boosted by logged mistakes</span>. The top row is literally what to study next.</td></tr>
+    <tr><td><b>Effort vs Yield</b></td><td>Hours spent vs mastery per subject. A subject low-right = you grind but don't gain — change <i>method</i>, not hours.</td></tr>
+    <tr><td><b>SRS Retention &amp; Decay</b></td><td>Predicted recall from your flashcard boxes, projected 30 days out. Falling? You're adding cards faster than you review them.</td></tr>
+    <tr><td><b>Global Velocity</b></td><td>Study hours/day vs last week. The momentum gauge — keep the arrow green.</td></tr>
+    <tr><td><b>Streak / Commit Heatmap</b></td><td>Consistency at a glance. Gaps are where progress evaporated.</td></tr>
+  </table>
+  <div class="callout"><span class="k">The 60-second daily ritual</span>Open Analytics once a day. Read <b>one</b> number off the Task Screener's top row, and make that your first repair block tomorrow. That single habit — letting the data pick your target — is the difference between busy and effective.</div>
+  <p>The scrolling ticker up top is your situational awareness: overall mastery, retention, volatility (consistency of scores), burn-risk, days left. Glance at burn-risk weekly — if it climbs, your coverage is losing the race against the clock.</p>
+  <div class="foot">SIEGE.AI</div><div class="pn">07</div>
+</section>
+
+<!-- ============ PAGE 8 — MEMORY & MISTAKES ============ -->
+<section class="page">
+  <div class="ph"><span>The Operator's Field Manual</span><span class="tag">// 06 · COMPOUNDING</span></div>
+  <h2><span class="num">06</span>Memory &amp; Mistakes: The Compounding Engine</h2>
+  <div class="lede">A mistake you log once is worth more than a topic you re-read five times.</div>
+  <h3>Flashcards — the Leitner ladder</h3>
+  <p>Cards live in boxes 1–5. Grade honestly after each: <b>easy</b> jumps the card two boxes, <b>good</b> one, <b>again</b> resets it to box 1. Higher box = longer until you see it again. The discipline is in grading truthfully — a card you "sort of" knew is a <i>good</i>, not an <i>easy</i>.</p>
+  <ul>
+    <li><b>Leech Hunter</b> — auto-suspends cards stuck in box 1. A leech means the card is badly written: break it into smaller atomic facts.</li>
+    <li><b>Cram Mode</b> — disables spacing and loads the whole deck. Reserve this for the final 48 hours only; it's a last resort, not a method.</li>
+    <li><b>Build cards from your errors</b>, not from the textbook. Every wrong exam question → one card.</li>
+  </ul>
+  <h3>The Mistake Log — your personal weakness map</h3>
+  <p>Log every question you got wrong with its topic. Over weeks this becomes a heat-map of exactly where you bleed marks — and it feeds the Task Screener's yield ranking. Use <b>Redemption Mode</b> to re-attempt your past mistakes; a mistake isn't fixed until you've beaten a similar question cold.</p>
+  <h3>The Notes Vault</h3>
+  <p>Markdown notes per topic, supercharged by AI: <b>Auto-Summarize</b> condenses, <b>Generate Mind Map</b> restructures, <b>Cloze Test</b> turns notes into fill-the-blank active recall, and <b>AI Content Audit</b> cross-checks your notes against the syllabus to flag <i>missing</i> concepts — the gaps you don't know you have.</p>
+  <div class="callout"><span class="k">The compounding law</span>Re-reading is linear; spaced recall is exponential. Twenty minutes of due-card review every day will, by exam week, have moved more marks than any single all-nighter ever could. Trust the boxes.</div>
+  <div class="grid2">
+    <div><h3>Do</h3><ul><li>Grade flashcards honestly</li><li>Log 100% of wrong questions</li><li>Review due cards <i>before</i> new study</li><li>Convert every error into a card</li></ul></div>
+    <div><h3>Don't</h3><ul><li>Mark "almost" as easy</li><li>Skip logging a "silly" mistake</li><li>Let due cards pile up</li><li>Cram before the final 48h</li></ul></div>
+  </div>
+  <div class="foot">SIEGE.AI</div><div class="pn">08</div>
+</section>
+
+<!-- ============ PAGE 9 — CAMPAIGN ============ -->
+<section class="page">
+  <div class="ph"><span>The Operator's Field Manual</span><span class="tag">// 07 · THE CAMPAIGN</span></div>
+  <h2><span class="num">07</span>The 12-Week Campaign &amp; Exam-Week Protocol</h2>
+  <div class="lede">Coverage early, repair in the middle, simulation at the end. In that order.</div>
+  <table>
+    <tr><th style="width:22%">Phase</th><th style="width:16%">Weeks</th><th>Mission</th></tr>
+    <tr><td><b>Foundation</b></td><td>1–3</td><td>Teach every weak topic to a baseline. Lean on CONCEPT TUTOR, EXPLAIN, SOCRATIC. Build your first flashcard decks.</td></tr>
+    <tr><td><b>Coverage</b></td><td>4–6</td><td>One real past paper per subject per week. Log everything. Let the radar fill in and the Task Screener wake up.</td></tr>
+    <tr><td><b>Saturation</b></td><td>7–9</td><td>Past-paper volume. Timed, Blind Mode on. Use Topic Search to hammer your two weakest radar spokes.</td></tr>
+    <tr><td><b>Repair</b></td><td>10–11</td><td>Pure Task-Screener-driven. Each day = the top weakness only, then a paper to prove the fix.</td></tr>
+    <tr><td><b>Simulation</b></td><td>12</td><td>Full papers under real exam timing. Curve Estimator after each. Only light, targeted review.</td></tr>
+  </table>
+  <h3>When it's going wrong — Crisis Mode</h3>
+  <p>If the deadline is close and coverage is thin, Burn-Risk will spike. Trigger <b>Crisis Mode</b> and obey the Task Screener ruthlessly: maximum-yield topics only, drop everything already green, accept that "good enough across the board" beats "perfect in one corner."</p>
+  <h3>Exam-week protocol</h3>
+  <table>
+    <tr><th style="width:30%">When</th><th>Protocol</th></tr>
+    <tr><td><b>T-7 days</b></td><td>Stop learning new topics. Switch fully to past papers + due-card review.</td></tr>
+    <tr><td><b>T-2 days</b></td><td>Re-attempt your logged mistakes (Redemption Mode). Run a COMMAND WORDS drill.</td></tr>
+    <tr><td><b>Night before</b></td><td>Light review of box-1/box-2 cards only. Pack equipment. Sleep — it's a mark-multiplier.</td></tr>
+    <tr><td><b>Morning of</b></td><td>No new material. 10 minutes of confident, already-known recall to warm up. Walk in calm.</td></tr>
+  </table>
+  <div class="callout"><span class="k">In the exam hall</span>Read the command word first, every time. "Describe" ≠ "Explain" ≠ "Evaluate." Answer the verb that's actually written, hit the mark-scheme keywords you drilled, and watch the clock you trained with.</div>
+  <div class="foot">SIEGE.AI</div><div class="pn">09</div>
+</section>
+
+<!-- ============ PAGE 10 — COMMANDMENTS ============ -->
+<section class="page">
+  <div class="ph"><span>The Operator's Field Manual</span><span class="tag">// 08 · THE COMMANDMENTS</span></div>
+  <h2><span class="num">08</span>The Operator's Twelve Commandments</h2>
+  <div class="big-q">Pin this page. Re-read it every Sunday. It is the whole manual compressed into twelve lines.</div>
+  <ol>
+    <li><b>Drill real papers above all else.</b> Nothing else moves marks as fast.</li>
+    <li><b>Log every score and every wrong question.</b> Unlogged work is invisible to the engine and, soon, to you.</li>
+    <li><b>Let the Task Screener pick your day.</b> Study the top of the yield list, not what's comfortable.</li>
+    <li><b>Grade yourself like a hostile examiner.</b> ROAST ME and MARK SCHEME exist to find marks you're losing now, in private, instead of in the hall.</li>
+    <li><b>Match the mode to the job.</b> Fifteen specialists beat one generalist.</li>
+    <li><b>Obey the command word.</b> Most lost marks are answers to a question that wasn't asked.</li>
+    <li><b>Review before you add.</b> Due flashcards first, new study second — always.</li>
+    <li><b>Trust the boxes, not the cram.</b> Spaced recall compounds; cramming evaporates.</li>
+    <li><b>Watch Burn-Risk weekly.</b> It's the only honest read on whether you're winning the race against the clock.</li>
+    <li><b>Protect the streak.</b> Small and logged beats heroic and forgotten.</li>
+    <li><b>Fix the method when effort stops yielding.</b> The Effort-vs-Yield chart will tell you when grinding harder is the wrong answer.</li>
+    <li><b>Be honest with the terminal.</b> It can only aim you as accurately as you report yourself.</li>
+  </ol>
+  <div class="rule"></div>
+  <div class="big-q">The highest marks on the planet aren't taken in the exam hall. They're assembled, day by logged day, in this terminal — and then simply collected on the day.</div>
+  <p style="color:var(--soft);font-style:italic">Now close the manual, open SIEGE, and build today's mission. The loop is waiting.</p>
+  <div class="foot">SIEGE.AI · END OF MANUAL</div><div class="pn">10</div>
+</section>
+
+</body>
+</html>

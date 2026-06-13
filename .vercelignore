@@ -1,0 +1,22 @@
+# Local-only Python backend (filesystem/Obsidian features that can't run on Vercel)
+server.py
+server.log
+patch_*.py
+launch_siege.sh
+Start_SIEGE_Mac.command
+Start_SIEGE_Windows.bat
+
+# Scratch + backups (not part of the shipped app)
+temp.js
+*.bak
+*.bak.html
+siege.v1.bak.html
+
+# Local data / build / tooling
+vault/
+__pycache__/
+_build/
+.agent/
+.claude/
+export
+SIEGE_Field_Manual.pdf

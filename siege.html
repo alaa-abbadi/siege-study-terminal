@@ -17,8 +17,11 @@
 <title>SIEGE // study terminal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Major+Mono+Display&family=VT323&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Major+Mono+Display&family=VT323&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <style>
 /* ============================================================
    THEMES — pure black brutalist · 3 variants
@@ -92,7 +95,8 @@
 :root{
   --mono:'JetBrains Mono',ui-monospace,monospace;
   --display:'Major Mono Display',monospace;
-  --term:'VT323',monospace;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --term:var(--serif);  /* readouts now use the clear serif (was VT323) */
   --ar-font:'Noto Naskh Arabic',serif;
   --tx:0.12s ease;
 }
@@ -104,7 +108,7 @@
 *::selection{background:var(--accent);color:var(--bg)}
 html,body{
   background:var(--bg);color:var(--ink);
-  font-family:var(--mono);font-size:13px;line-height:1.5;
+  font-family:var(--serif);font-size:15px;line-height:1.6;font-weight:450;
   min-height:100vh;overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
 }
@@ -404,6 +408,8 @@ a:hover{color:var(--accent)}
 .paper-links{display:flex;gap:4px;margin-top:6px}
 .paper-links a{font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:1px 5px;border:1px solid var(--dim);color:var(--muted)}
 .paper-links a:hover{border-color:var(--accent);color:var(--accent)}
+.paper-cell.topic-hit{border-color:var(--cy);box-shadow:0 0 0 1px var(--cy),0 0 12px rgba(0,255,200,0.18)}
+.paper-cell.topic-hit .paper-code{color:var(--cy)}
 
 /* ============================================================
    CHAT / AI
@@ -419,6 +425,25 @@ a:hover{color:var(--accent)}
 .mode-icon{font-family:var(--term);font-size:22px;color:var(--accent);margin-bottom:6px}
 .mode-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--ink);margin-bottom:4px}
 .mode-desc{font-size:10px;color:var(--muted);line-height:1.4}
+.ai-mode-wrap{display:flex;flex-direction:column;gap:16px;margin-bottom:20px}
+.mode-section-title{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--line)}
+.mode-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+/* diagram engine */
+.diag-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.86);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:18px}
+.diag-box{background:#020602;border:2px solid #10b981;width:96%;max-width:780px;max-height:92vh;display:flex;flex-direction:column;font-family:var(--mono);box-shadow:10px 10px 0 rgba(0,0,0,0.55);position:relative}
+.diag-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #1a3a1a;flex-wrap:wrap}
+.diag-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex:1}
+.diag-controls select,.diag-controls input{background:#000;border:1px solid #1a3a1a;color:#86efac;font-family:var(--mono);font-size:11px;padding:5px 7px}
+.diag-controls input{min-width:160px;flex:1}
+.diag-btn{background:#000;border:1px solid #4ade80;color:#4ade80;font-family:var(--mono);font-size:11px;padding:5px 10px;cursor:pointer;line-height:1}
+.diag-btn:hover{background:#4ade80;color:#000}
+.diag-stage{flex:1;overflow:auto;padding:18px;position:relative;background:#020602;min-height:260px;display:flex;align-items:center;justify-content:center;text-align:center}
+.diag-stage svg{max-width:100%;height:auto;display:block}
+.diag-scan{pointer-events:none;position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(74,222,128,0.045) 0px,rgba(74,222,128,0.045) 1px,transparent 1px,transparent 3px);z-index:3}
+.diag-loading{color:#4ade80;font-size:13px;letter-spacing:.14em;animation:pulse 1.4s infinite}
+.diag-err{color:#ef4444;font-size:12px;line-height:1.6}
+.topic-viz-btn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:6px;border:1px solid #1a3a1a;color:#4ade80;font-size:11px;cursor:pointer;border-radius:2px;vertical-align:middle}
+.topic-viz-btn:hover{background:#10b981;color:#000;border-color:#10b981}
 
 .chat-box{
   border:2px solid var(--ink);background:var(--bg-2);
@@ -1139,6 +1164,8 @@ a:hover{color:var(--accent)}
       <a href="https://papacambridge.com" target="_blank" class="btn ghost sm">papacambridge.com →</a>
       <a href="https://www.savemyexams.com" target="_blank" class="btn ghost sm">savemyexams.com →</a>
       <a href="https://www.physicsandmathstutor.com" target="_blank" class="btn ghost sm">physicsandmathstutor →</a>
+      <a href="https://www.dynamicpapers.com" target="_blank" class="btn ghost sm">dynamicpapers.com →</a>
+      <a href="https://xtremepapers.com" target="_blank" class="btn ghost sm">xtremepapers.com →</a>
     </div>
   </div>
 </section>
@@ -1157,83 +1184,107 @@ a:hover{color:var(--accent)}
     SIEGE does not invent past paper questions or fake paper codes. The AI's job is to find real past papers, explain questions you don't understand, walk through mark schemes, and plan your study. Always verify references against the linked sources.
   </div>
 
-  <div class="ai-modes" id="ai-modes">
-    <div class="mode-card active" data-mode="plan">
-      <div class="mode-icon">▤</div>
-      <div class="mode-name">plan</div>
-      <div class="mode-desc">daily mission with real paper codes</div>
+  <div class="ai-mode-wrap" id="ai-modes">
+
+    <div class="mode-section">
+      <div class="mode-section-title">// learn · understand concepts</div>
+      <div class="mode-grid">
+        <div class="mode-card" data-mode="explain">
+          <div class="mode-icon">?</div>
+          <div class="mode-name">explain</div>
+          <div class="mode-desc">paste a question, get a breakdown</div>
+        </div>
+        <div class="mode-card" data-mode="concept">
+          <div class="mode-icon">◆</div>
+          <div class="mode-name">concept tutor</div>
+          <div class="mode-desc">explain a syllabus topic</div>
+        </div>
+        <div class="mode-card" data-mode="socratic">
+          <div class="mode-icon">∴</div>
+          <div class="mode-name">socratic</div>
+          <div class="mode-desc">ai asks, you answer</div>
+        </div>
+        <div class="mode-card" data-mode="chem">
+          <div class="mode-icon">⚗</div>
+          <div class="mode-name">chem 0620</div>
+          <div class="mode-desc">chemistry specialist — 0620 extended</div>
+        </div>
+      </div>
     </div>
-    <div class="mode-card" data-mode="explain">
-      <div class="mode-icon">?</div>
-      <div class="mode-name">explain</div>
-      <div class="mode-desc">paste a question, get a breakdown</div>
+
+    <div class="mode-section">
+      <div class="mode-section-title">// practise &amp; grade · sharpen answers</div>
+      <div class="mode-grid">
+        <div class="mode-card" data-mode="markscheme">
+          <div class="mode-icon">⊟</div>
+          <div class="mode-name">mark scheme</div>
+          <div class="mode-desc">grade your answer like CAIE would</div>
+        </div>
+        <div class="mode-card" data-mode="roastme">
+          <div class="mode-icon">*</div>
+          <div class="mode-name">roast me</div>
+          <div class="mode-desc">harsh feedback on answer</div>
+        </div>
+        <div class="mode-card" data-mode="keyword">
+          <div class="mode-icon">#</div>
+          <div class="mode-name">keyword extract</div>
+          <div class="mode-desc">get mandatory MS keywords</div>
+        </div>
+        <div class="mode-card" data-mode="command">
+          <div class="mode-icon">⊳</div>
+          <div class="mode-name">command words</div>
+          <div class="mode-desc">drill describe/explain/justify</div>
+        </div>
+        <div class="mode-card" data-mode="examiner">
+          <div class="mode-icon">~</div>
+          <div class="mode-name">examiner debate</div>
+          <div class="mode-desc">argue for partial marks</div>
+        </div>
+      </div>
     </div>
-    <div class="mode-card" data-mode="markscheme">
-      <div class="mode-icon">⊟</div>
-      <div class="mode-name">mark scheme</div>
-      <div class="mode-desc">grade your answer like CAIE would</div>
+
+    <div class="mode-section">
+      <div class="mode-section-title">// plan &amp; target · strategy</div>
+      <div class="mode-grid">
+        <div class="mode-card active" data-mode="plan">
+          <div class="mode-icon">▤</div>
+          <div class="mode-name">plan</div>
+          <div class="mode-desc">daily mission with real paper codes</div>
+        </div>
+        <div class="mode-card" data-mode="weakness">
+          <div class="mode-icon">!</div>
+          <div class="mode-name">weakness audit</div>
+          <div class="mode-desc">find what to fix next</div>
+        </div>
+        <div class="mode-card" data-mode="recommender">
+          <div class="mode-icon">▸</div>
+          <div class="mode-name">recommender</div>
+          <div class="mode-desc">which paper should i attempt?</div>
+        </div>
+        <div class="mode-card" data-mode="predict">
+          <div class="mode-icon">◎</div>
+          <div class="mode-name">topic predictor</div>
+          <div class="mode-desc">what's likely to appear this session?</div>
+        </div>
+      </div>
     </div>
-    <div class="mode-card" data-mode="weakness">
-      <div class="mode-icon">!</div>
-      <div class="mode-name">weakness audit</div>
-      <div class="mode-desc">find what to fix next</div>
+
+    <div class="mode-section">
+      <div class="mode-section-title">// input · capture questions</div>
+      <div class="mode-grid">
+        <div class="mode-card" data-mode="ocr">
+          <div class="mode-icon">[ ]</div>
+          <div class="mode-name">ocr solver</div>
+          <div class="mode-desc">upload image to solve</div>
+        </div>
+        <div class="mode-card" data-mode="dictate">
+          <div class="mode-icon">^</div>
+          <div class="mode-name">dictate</div>
+          <div class="mode-desc">voice to text answer</div>
+        </div>
+      </div>
     </div>
-    <div class="mode-card" data-mode="recommender">
-      <div class="mode-icon">▸</div>
-      <div class="mode-name">recommender</div>
-      <div class="mode-desc">which paper should i attempt?</div>
-    </div>
-    <div class="mode-card" data-mode="concept">
-      <div class="mode-icon">◆</div>
-      <div class="mode-name">concept tutor</div>
-      <div class="mode-desc">explain a syllabus topic</div>
-    </div>
-    <div class="mode-card" data-mode="command">
-      <div class="mode-icon">⊳</div>
-      <div class="mode-name">command words</div>
-      <div class="mode-desc">drill describe/explain/justify</div>
-    </div>
-    <div class="mode-card" data-mode="socratic">
-      <div class="mode-icon">∴</div>
-      <div class="mode-name">socratic</div>
-      <div class="mode-desc">ai asks, you answer</div>
-    </div>
-    <div class="mode-card" data-mode="chem">
-      <div class="mode-icon">⚗</div>
-      <div class="mode-name">chem 0620</div>
-      <div class="mode-desc">chemistry specialist — 0620 extended</div>
-    </div>
-    <div class="mode-card" data-mode="predict">
-      <div class="mode-icon">◎</div>
-      <div class="mode-name">topic predictor</div>
-      <div class="mode-desc">what's likely to appear this session?</div>
-    </div>
-    <!-- NEW FEATURES -->
-    <div class="mode-card" data-mode="ocr">
-      <div class="mode-icon">[ ]</div>
-      <div class="mode-name">ocr solver</div>
-      <div class="mode-desc">upload image to solve</div>
-    </div>
-    <div class="mode-card" data-mode="roastme">
-      <div class="mode-icon">*</div>
-      <div class="mode-name">roast me</div>
-      <div class="mode-desc">harsh feedback on answer</div>
-    </div>
-    <div class="mode-card" data-mode="keyword">
-      <div class="mode-icon">#</div>
-      <div class="mode-name">keyword extract</div>
-      <div class="mode-desc">get mandatory MS keywords</div>
-    </div>
-    <div class="mode-card" data-mode="dictate">
-      <div class="mode-icon">^</div>
-      <div class="mode-name">dictate</div>
-      <div class="mode-desc">voice to text answer</div>
-    </div>
-    <div class="mode-card" data-mode="examiner">
-      <div class="mode-icon">~</div>
-      <div class="mode-name">examiner debate</div>
-      <div class="mode-desc">argue for partial marks</div>
-    </div>
+
   </div>
 
   <div class="chat-box">
@@ -1250,6 +1301,7 @@ a:hover{color:var(--accent)}
       <button class="chat-btn-icon" id="chat-mic" title="voice input">&#9673;</button>
       <button class="chat-btn-icon" id="chat-yt" title="youtube transcript">&#9654;</button>
       <button class="chat-btn-icon" id="chat-rag" title="toggle vault knowledge graph (RAG)" style="color:var(--muted)">⚲</button>
+      <button class="chat-btn-icon" id="chat-visualize" title="visualize this topic as a diagram">◊</button>
       <button class="chat-send" id="chat-send">SEND</button>
     </div>
   </div>
@@ -1442,6 +1494,7 @@ a:hover{color:var(--accent)}
     <button class="btn ghost" onclick="appAction('cloze_test')">cloze test</button>
     <button class="btn ghost" onclick="window.print()">export to pdf</button>
     <button class="btn ghost" onclick="appAction('ai_audit')">ai content audit</button>
+    <button class="btn ghost" onclick="visualizeFromNotes()">◊ visualize</button>
   </div>
   <div class="notes-grid">
     <div class="notes-side" id="notes-side"></div>
@@ -1904,59 +1957,76 @@ export default {
 
 <script>
 
+// API base: hit the SAME origin the page was served from (the launcher serves http://localhost:8080),
+// so POST uploads are same-origin and never blocked by a CORS preflight / Private-Network check.
+// Falls back to the local server only when the page is opened directly as a file:// document.
+const API_BASE = (location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : 'http://localhost:8080';
+
+// Applied on top of EVERY AI mode's prompt: keep answers IGCSE-only, source-aligned, short, no reasoning shown.
+const IGCSE_DIRECTIVE = `STRICT RULES — apply to EVERY answer, overriding anything below that conflicts:
+1. SCOPE: Stay strictly within the Cambridge IGCSE syllabus. Never exceed IGCSE depth or add A-level/university material. If asked something beyond IGCSE, say so in one short line, then give the IGCSE-level answer.
+2. SOURCE STANDARD: Answer in the style, depth and wording of Save My Exams (savemyexams.com) and ZNotes (znotes.org) IGCSE revision notes — syllabus-point focused, exam- and mark-scheme oriented. Use them as your benchmark for how much detail an IGCSE student actually needs.
+3. LENGTH: Be concise. Prefer short paragraphs or bullet points. No preamble, filler, or repetition — lead with the answer.
+4. NO THINKING ALOUD: Output ONLY the final answer. Never show reasoning, planning, or meta-commentary (no "First I need to…", no "The user wants…").
+5. MATH & FORMULAS: Write every formula, equation, fraction, unit and sub/superscript in LaTeX — inline as $...$ and standalone as $$...$$. Examples: $v = f\\lambda$, $f = \\frac{1}{T}$, $E_k = \\frac{1}{2}mv^2$. Use LaTeX for chemistry too: $H_2O$, $2H_2 + O_2 \\rightarrow 2H_2O$. Write a literal money sign as \\$ so it is not read as math.`;
+
+// Reasoning models leak their chain-of-thought into the reply. Suppress it per each model's
+// supported parameter (Groq validates these strictly and differs by model family).
+function reasoningParams(model){
+  const m = model || '';
+  // gpt-oss accepts reasoning_effort only as "none" | "default"; "none" turns reasoning OFF entirely.
+  if(/gpt-oss/i.test(m)) return { reasoning_effort: 'none' };
+  // qwen3 / deepseek-r1 expose reasoning via reasoning_format; "hidden" keeps it out of the answer.
+  if(/qwen3|qwen-3|deepseek-r1/i.test(m)) return { reasoning_format: 'hidden' };
+  return {};
+}
+
 let tickerInt;
-function startLiveTicker() {
-  if(tickerInt) clearInterval(tickerInt);
-  const t = document.getElementById('bloomberg-ticker');
-  if(!t) return;
-  
-  // Calculate real metrics based on profile data
-  const calculateMetrics = () => {
-    const p = P();
-    const todayStr = new Date().toISOString().slice(0,10);
-    const todayLogs = p.studyLog.filter(l => l.date === todayStr);
-    const minsToday = todayLogs.reduce((a,b)=>a+b.mins,0);
-    
-    // Tasks completed today
-    // We don't have task completion timestamps, so we use streak as proxy for overall momentum
-    const velocity = (minsToday / 60).toFixed(2); 
-    
-    // Retention based on flashcards
-    let retention = 0;
-    if(p.flashcards && p.flashcards.length > 0) {
-      const mature = p.flashcards.filter(f => f.interval > 21).length;
-      retention = (mature / p.flashcards.length * 100).toFixed(1);
-    } else {
-      retention = 85.0; // baseline if no cards
-    }
-    
-    // Monte Carlo probability proxy based on topic mastery
-    let totalTopics = 0;
-    let doneTopics = 0;
-    Object.values(p.subjects).forEach(s => {
-      const tpcs = Object.values(s.topics);
-      totalTopics += tpcs.length;
-      doneTopics += tpcs.filter(x=>x.status==='done').length;
-    });
-    
-    let prob = 50; // base probability
-    if(totalTopics > 0) {
-      prob = 50 + (doneTopics/totalTopics * 40);
-    }
-    
-    const velElem = document.getElementById('stat-velocity');
-    const retElem = document.getElementById('stat-retention');
-    const probElem = document.getElementById('stat-prob');
-    
-    if(velElem) velElem.innerText = velocity;
-    if(retElem) retElem.innerText = retention + '%';
-    if(probElem) probElem.innerText = prob.toFixed(1) + '%';
-    
-    t.innerText = `SYS.MEM: OK | LAST.SYNC: ${new Date().toLocaleTimeString()} | OVERALL.MASTERY: ${(doneTopics/Math.max(1,totalTopics)*100).toFixed(1)}% | SRS.RETENTION: ${retention}% | ACTIVE.STREAK: ${p.streak.count || 0} DAYS | TODAY.LOG: ${minsToday} MINS`;
+// Push the live snapshot into the 3 hero stat cards.
+function updateStatCards(A){
+  const set = (id, val, sub, good) => {
+    const e = document.getElementById(id); if(!e) return;
+    e.textContent = val;
+    const s = e.nextElementSibling;
+    if(s && sub!=null){ s.innerHTML = sub; if(good!=null) s.style.color = good ? '#0f0' : 'var(--warn)'; }
   };
-  
-  calculateMetrics(); // Initial
-  tickerInt = setInterval(calculateMetrics, 60000); // Update every minute
+  set('stat-velocity', A.velocity.toFixed(2),
+     `hrs/day · ${A.velDelta>=0?'▲ +':'▼ '}${Math.abs(A.velDelta).toFixed(0)}% vs last wk`, A.velDelta>=0);
+  set('stat-retention', A.retention==null ? 'N/A' : A.retention.toFixed(0)+'%',
+     A.retention==null ? 'add flashcards to model recall' : `${Math.round(A.matureFrac*100)}% mature · base 80%`,
+     A.retention==null ? null : (A.retention>=80));
+  set('stat-prob', A.aStarProb==null ? 'N/A' : A.aStarProb.toFixed(1)+'%',
+     A.aStarProb==null ? 'log papers to model grade' : `monte carlo · ${A.subjects.filter(s=>s.paperCount).length} subj w/ data`,
+     A.aStarProb==null ? null : (A.aStarProb>=50));
+}
+// Render the scrolling terminal ticker from real metrics.
+function updateTicker(A){
+  const t = document.getElementById('bloomberg-ticker'); if(!t) return;
+  const parts = [
+    'SYS.MEM: OK',
+    'LAST.SYNC: ' + new Date().toLocaleTimeString(),
+    'OVERALL.MASTERY: ' + A.masteryPct.toFixed(1) + '%',
+    'A*.PROB: ' + (A.aStarProb==null ? 'N/A' : A.aStarProb.toFixed(1)+'%'),
+    'SRS.RETENTION: ' + (A.retention==null ? 'N/A' : A.retention.toFixed(0)+'%'),
+    'VOLATILITY: ' + A.volatility,
+    'BURN.RISK: ' + A.burnRisk.toFixed(0) + '% ' + (A.burnRisk>40?'▲':'▼'),
+    'STREAK: ' + (A.streak.count||0) + 'D',
+    'TODAY.LOG: ' + A.minsToday + 'M',
+    'DAYS.LEFT: ' + A.daysLeft,
+    'PRED.DEV: ± ' + (A.deviation==null ? '—' : A.deviation.toFixed(1)+'%')
+  ];
+  t.innerText = parts.join('   |   ');
+}
+function refreshLiveMetrics(){
+  const A = computeAnalytics();
+  updateStatCards(A);
+  updateTicker(A);
+}
+function startLiveTicker(){
+  if(tickerInt) clearInterval(tickerInt);
+  if(!document.getElementById('bloomberg-ticker')) return;
+  refreshLiveMetrics();
+  tickerInt = setInterval(refreshLiveMetrics, 30000);
 }
 
 // ============================================================
@@ -2363,8 +2433,33 @@ function gceGuideLink(subj, paperNum, variant, session, year, type='qp'){
   const sLetter = {'M/J':'s','O/N':'w','F/M':'m'}[session];
   const yy = String(year).slice(-2);
   const fname = `${subj.code}_${sLetter}${yy}_${type}_${paperNum}${variant}.pdf`;
-  // Replace dead gceguide link with dynamic google search for the pdf file
-  return `https://www.google.com/search?q=${fname}+filetype%3Apdf`;
+
+  const bestExamHelpSlugs = {
+    '0620': 'chemistry-0620',
+    '0610': 'biology-0610',
+    '0625': 'physics-0625',
+    '0654': 'sciences-co-ordinated-0654',
+    '0580': 'mathematics-0580',
+    '0606': 'mathematics-additional-0606',
+    '0607': 'mathematics-international-0607',
+    '0500': 'english-first-language-0500',
+    '0508': 'arabic-first-language-0508',
+    '0475': 'english-literature-0475',
+    '0470': 'history-0470',
+    '0460': 'geography-0460',
+    '0450': 'business-studies-0450',
+    '0455': 'economics-0455',
+    '0452': 'accounting-0452',
+    '0478': 'computer-science-0478'
+  };
+
+  if (bestExamHelpSlugs[subj.code]) {
+    return `https://bestexamhelp.com/exam/cambridge-igcse/${bestExamHelpSlugs[subj.code]}/${year}/${fname}`;
+  }
+
+  // Fallback to PapaCambridge direct PDF link
+  const folderName = getGceFolderName(subj);
+  return `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/Cambridge%20IGCSE/${encodeURIComponent(folderName)}/${year}/${fname}`;
 }
 function papaCambridgeLink(subj){
   if(subj.board !== 'CAIE') return null;
@@ -3449,7 +3544,15 @@ function bumpStreak(){
 // ============================================================
 function mdRender(s){
   if(!s) return '';
-  s = String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s = String(s);
+  // Defensive: strip any chain-of-thought the model leaks (reasoning_format:hidden should prevent it).
+  s = s.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<think>[\s\S]*$/i, '').replace(/<\/?reasoning>/gi, '').trimStart();
+  // Protect LaTeX math from markdown/escaping; KaTeX renders it after the HTML is inserted.
+  const _math = [];
+  const _stash = (m) => { _math.push(m); return `\x00M${_math.length-1}\x00`; };
+  s = s.replace(/\$\$[\s\S]+?\$\$/g, _stash).replace(/\\\[[\s\S]+?\\\]/g, _stash)
+       .replace(/\\\([\s\S]+?\\\)/g, _stash).replace(/\$([^$\n]*[\\^_{}][^$\n]*)\$/g, _stash);
+  s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   s = s.replace(/```([\s\S]*?)```/g, (m,c) => `<pre>${c}</pre>`);
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -3486,7 +3589,25 @@ function mdRender(s){
   }
   if(inUL) out += '</ul>';
   if(inOL) out += '</ol>';
+  // restore protected math (escaped so innerHTML is safe; KaTeX reads textContent when typeset)
+  out = out.replace(/\x00M(\d+)\x00/g, (mm, i) => _math[+i].replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
   return out;
+}
+
+// Render any LaTeX in a freshly-populated element using KaTeX (loaded async; no-op until ready).
+function typesetMath(el){
+  if(!el || !window.renderMathInElement) return;
+  try {
+    window.renderMathInElement(el, {
+      delimiters: [
+        {left:'$$', right:'$$', display:true},
+        {left:'\\[', right:'\\]', display:true},
+        {left:'\\(', right:'\\)', display:false},
+        {left:'$', right:'$', display:false}
+      ],
+      throwOnError: false
+    });
+  } catch(e){}
 }
 
 
@@ -3685,6 +3806,8 @@ function openSubjPicker(){
 // ============================================================
 
 let paperFilters = { subj:'', paper:'all', year:'all', session:'all', status:'all' };
+// When active: { topic: string, hits: { [paperKey]: { q, why } } } from "ask ai for topic".
+let topicSearch = null;
 
 function paperKey(subjCode, paperNum, variant, session, year){
   return `${subjCode}|${paperNum}${variant}|${session}|${year}`;
@@ -3741,12 +3864,12 @@ function renderPaperLibrary(){
   $('#pf-status').value = paperFilters.status;
 
   // wire
-  subjSel.onchange = e => { paperFilters.subj = e.target.value; paperFilters.paper = 'all'; renderPaperLibrary(); };
+  subjSel.onchange = e => { paperFilters.subj = e.target.value; paperFilters.paper = 'all'; topicSearch = null; renderPaperLibrary(); };
   paperSel.onchange = e => { paperFilters.paper = e.target.value; renderPapersGrid(); };
   yearSel.onchange = e => { paperFilters.year = e.target.value; renderPapersGrid(); };
   $('#pf-session').onchange = e => { paperFilters.session = e.target.value; renderPapersGrid(); };
   $('#pf-status').onchange = e => { paperFilters.status = e.target.value; renderPapersGrid(); };
-  $('#pf-reset').onclick = () => { paperFilters = { subj:paperFilters.subj, paper:'all', year:'all', session:'all', status:'all' }; renderPaperLibrary(); };
+  $('#pf-reset').onclick = () => { paperFilters = { subj:paperFilters.subj, paper:'all', year:'all', session:'all', status:'all' }; topicSearch = null; renderPaperLibrary(); };
 
   renderPapersGrid();
 }
@@ -3754,7 +3877,7 @@ function renderPaperLibrary(){
 function renderPapersGrid(){
   const subj = SYLLABI[paperFilters.subj];
   const st = getSubjState(paperFilters.subj);
-  const papers = buildAllPapers(paperFilters.subj).filter(p => {
+  let papers = buildAllPapers(paperFilters.subj).filter(p => {
     if(paperFilters.paper !== 'all' && p.paperNum !== paperFilters.paper) return false;
     if(paperFilters.year !== 'all' && p.year !== parseInt(paperFilters.year)) return false;
     if(paperFilters.session !== 'all' && p.session !== paperFilters.session) return false;
@@ -3766,6 +3889,22 @@ function renderPapersGrid(){
   });
 
   const wrap = $('#papers-grid');
+
+  // Topic search → the CARDS themselves are the topic-specific question sets (real compilations). Nothing else.
+  if(topicSearch){
+    const header = `<div class="topic-result-banner" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--cy);background:rgba(0,0,0,0.4);padding:11px 14px;margin-bottom:6px">
+        <div style="font-size:12px;color:var(--cy);line-height:1.4"><span style="opacity:.7">✦ topic:</span> <b>${escapeHTML(topicSearch.topic)}</b> <span style="opacity:.6">— past-paper questions on exactly this topic</span></div>
+        <button class="btn xs ghost" onclick="clearTopicSearch()">clear ✕</button>
+      </div>`;
+    wrap.innerHTML = header + (topicSearch.links||[]).map(l => `<div class="paper-cell topic-hit" data-url="${l.url}" style="cursor:pointer">
+        <div class="paper-code" style="font-size:15px">${escapeHTML(l.src)}</div>
+        <div class="paper-meta">${escapeHTML(l.label)}</div>
+        <div class="paper-links"><a href="${l.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">open questions →</a></div>
+      </div>`).join('');
+    $$('#papers-grid .paper-cell').forEach(c => c.addEventListener('click', ()=> window.open(c.dataset.url, '_blank', 'noopener')));
+    return;
+  }
+
   if(papers.length === 0){
     wrap.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="sm">no papers match these filters.</div></div>';
     return;
@@ -3793,6 +3932,11 @@ function renderPapersGrid(){
   }));
 }
 
+function clearTopicSearch(){
+  topicSearch = null;
+  renderPapersGrid();
+}
+
 function openPaperModal(key){
   const [scode, pnv, sess, yy] = key.split('|');
   const subj = SYLLABI[paperFilters.subj];
@@ -3802,17 +3946,34 @@ function openPaperModal(key){
   const m = pnv.match(/^(\d+)(.)$/);
   const paperNum = m ? m[1] : pnv.slice(0,-1);
   const variant = m ? m[2] : pnv.slice(-1);
-  const year = 2000 + parseInt(yy);
-  const code = `${scode}/${pnv}/${sess}/${yy}`;
+  const yNum = parseInt(yy);
+  const year = yNum > 100 ? yNum : 2000 + yNum;   // paper keys store the full year; tolerate legacy 2-digit
+  const yy2 = String(year).slice(-2);
+  const code = `${scode}/${pnv}/${sess}/${yy2}`;    // canonical CAIE format (matches the working grid links)
   const gce = gceGuideLink(subj, paperNum, variant, sess, year, 'qp');
   const gceMs = gceGuideLink(subj, paperNum, variant, sess, year, 'ms');
   const pp = papaCambridgeLink(subj);
   const sme = smeLink(subj);
   const pm = subj.paperStruct.find(x => x.num === paperNum);
+  // decoded intel for the info panel
+  const sessName = {'M/J':'May / June','O/N':'Oct / Nov','F/M':'Feb / March'}[sess] || sess;
+  const hit = (typeof topicSearch !== 'undefined' && topicSearch && topicSearch.components && topicSearch.components.includes(paperNum)) ? { topic: topicSearch.topic } : null;
+  const pct = (entry && entry.total) ? Math.round(entry.score/entry.total*100) : null;
 
   openModal(`
     <h3>${code}</h3>
     <p class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">${pm ? pm.name + ' · ' + pm.marks + ' marks · ' + pm.time + ' min' : ''}</p>
+
+    <div class="card" style="background:var(--bg);margin-bottom:14px;border-color:var(--cy)">
+      <span class="card-tag cy">// paper intel</span>
+      <div style="margin-top:10px;font-size:12px;line-height:1.8;color:var(--ink)">
+        <div><span class="muted">subject</span>&nbsp; ${subj.code} ${escapeHTML(subj.name)} · ${subj.board}${subj.tier?' · '+escapeHTML(subj.tier):''}</div>
+        <div><span class="muted">component</span>&nbsp; ${pm ? escapeHTML(pm.name)+' — '+pm.marks+' marks, '+pm.time+' min' : 'paper '+paperNum}</div>
+        <div><span class="muted">sitting</span>&nbsp; ${sessName} ${year} · variant ${variant} (zone ${variant})</div>
+        <div><span class="muted">your status</span>&nbsp; ${status==='done'?('done & marked'+(pct!=null?` — ${entry.score}/${entry.total} (${pct}%)`:'')):(status==='attempted'?'attempted — not yet marked':'not started')}</div>
+        ${hit ? `<div style="color:var(--cy);margin-top:8px;border-top:1px solid var(--line);padding-top:8px">⌖ this component tests your "<b>${escapeHTML(hit.topic)}</b>" topic — use the search links above the grid for the exact questions</div>` : ''}
+      </div>
+    </div>
 
     <div class="card" style="background:var(--bg);margin-bottom:16px">
       <span class="card-tag">// open paper</span>
@@ -4301,6 +4462,7 @@ function renderChatLog(){
     const content = m.role === 'assistant' ? stripMissionTokens(m.content) : m.content;
     return `<div class="chat-msg ${m.role}">${mdRender(content)}</div>`;
   }).join('');
+  typesetMath(log);
   log.scrollTop = log.scrollHeight;
 }
 
@@ -4320,7 +4482,7 @@ async function sendChat(){
   
   if(window.ragEnabled) {
     try {
-      const resp = await fetch('http://localhost:8080/api/backend/rag-search', {
+      const resp = await fetch(API_BASE + '/api/backend/rag-search', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({query: text})
@@ -4462,20 +4624,29 @@ function parseMissionUpdate(text){
 async function groqStream(){
   const p = P();
   const ctx = buildContextDigest();
-  const sys = AI_MODES[aiMode].sys(p, ctx) + (p.sysPromptExtra ? '\n\nEXTRA: ' + p.sysPromptExtra : '');
+  const sys = IGCSE_DIRECTIVE + '\n\n' + AI_MODES[aiMode].sys(p, ctx) + (p.sysPromptExtra ? '\n\nEXTRA: ' + p.sysPromptExtra : '');
 
-  // Fix 413 error: truncate chat history to last 12 messages to fit context limits
+  // Token saver: keep only the last 8 turns of history (was 12) — fewer input tokens per call.
   let recentMsgs = p.chatByMode[aiMode];
-  if (recentMsgs.length > 12) recentMsgs = recentMsgs.slice(recentMsgs.length - 12);
-  
-  // Build messages, handling image attachments
-  const hasImageMsg = recentMsgs.some(m => m.image);
-  const useModel = hasImageMsg ? 'llama-3.2-90b-vision-preview' : p.model;
+  if (recentMsgs.length > 8) recentMsgs = recentMsgs.slice(recentMsgs.length - 8);
+
+  // Token saver: only send an image when it was attached THIS turn (within the last 2 messages).
+  // Re-uploading old base64 images on every message is by far the biggest hidden cost with vision.
+  let lastImageIdx = -1;
+  for(let i = recentMsgs.length - 1; i >= 0; i--){ if(recentMsgs[i].image){ lastImageIdx = i; break; } }
+  const sendImageIdx = (lastImageIdx >= recentMsgs.length - 2) ? lastImageIdx : -1;
+  const hasImageMsg = sendImageIdx >= 0;
+  // Groq decommissioned the llama-3.2 vision models; Llama 4 Scout is the multimodal replacement.
+  const useModel = hasImageMsg ? 'meta-llama/llama-4-scout-17b-16e-instruct' : p.model;
+
+  // Token saver: cap older history messages so a giant paste isn't re-sent in full every turn.
+  const capOld = (txt, i) => (i < recentMsgs.length - 1 && typeof txt === 'string' && txt.length > 2400)
+    ? txt.slice(0, 2400) + ' …[truncated]' : (txt || '');
 
   const messages = [
     { role: 'system', content: sys },
-    ...recentMsgs.map(m => {
-      if(m.image){
+    ...recentMsgs.map((m, i) => {
+      if(m.image && i === sendImageIdx){
         return {
           role: m.role,
           content: [
@@ -4484,7 +4655,8 @@ async function groqStream(){
           ]
         };
       }
-      return { role: m.role, content: m.content };
+      // older / other messages: send text only and drop any base64 image payload
+      return { role: m.role, content: capOld(m.content || (m.image ? '[image]' : ''), i) };
     })
   ];
 
@@ -4507,7 +4679,8 @@ async function groqStream(){
       messages,
       stream: true,
       temperature: aiMode === 'plan' ? 0.4 : 0.7,
-      max_tokens: 2048
+      max_tokens: 1280,
+      ...reasoningParams(useModel)
     })
   });
 
@@ -4545,6 +4718,7 @@ async function groqStream(){
   }
 
   lastMsg.innerHTML = mdRender(acc);
+  typesetMath(lastMsg);
   p.chatByMode[aiMode][p.chatByMode[aiMode].length - 1].content = acc;
   save();
 }
@@ -4585,7 +4759,8 @@ Output schema:
         { role: 'system', content: sys },
         { role: 'user', content: userMsg }
       ],
-      temperature: 0.5, max_tokens: 1200
+      temperature: 0.5, max_tokens: 1200,
+      ...reasoningParams(p.model)
     })
   });
   if(!res.ok){
@@ -4715,239 +4890,239 @@ function renderPomoLog(){
 }
 
 // ============================================================
-// STATS / CHARTS
+// STATS / CHARTS — quant analytics engine
+// Derives every dashboard metric from real profile data.
+// Pure + defensive: tolerates empty data and legacy shapes.
 // ============================================================
 
-function drawDecayChart(){
-  const canvas = $('#chart-decay');
-  if(!canvas) return;
+// Normalise topicProgress (object {idx:val} OR array) -> numeric array of 0/1/2.
+function topicProgressArr(st, n){
+  const tp = st && st.topicProgress; const out = new Array(n).fill(0);
+  if(tp){ for(let i=0;i<n;i++){ const v = tp[i]; if(typeof v === 'number') out[i] = v; } }
+  return out;
+}
+function statMean(a){ return a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0; }
+function statStdev(a){ if(a.length<2) return 0; const m=statMean(a); return Math.sqrt(statMean(a.map(v=>(v-m)*(v-m)))); }
+// Deterministic gaussian (seeded) so Monte Carlo stays stable between renders.
+function gaussSampler(seed){
+  const r = rng((seed>>>0) || 1);
+  return (mu, sd) => { let u=0,v=0; while(u===0)u=r(); while(v===0)v=r(); return mu + sd*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); };
+}
+const ASTAR_BOUNDARY = 90, A_BOUNDARY = 80; // approx CAIE extended grade thresholds (% of total)
+
+// Full per-subject statistical profile.
+function subjStats(c){
+  const subj = SYLLABI[c]; const st = getSubjState(c); const n = subj.topics.length;
+  const tp = topicProgressArr(st, n);
+  const topicsDone = tp.filter(v=>v>=2).length;
+  const topicsLearning = tp.filter(v=>v===1).length;
+  const topicScore = n ? tp.reduce((a,b)=>a+b,0)/(2*n) : 0; // 0..1
+  const papers = (st.papers||[]).filter(p=>p && p.total>0)
+    .map(p=>({ ...p, pct: clamp(p.score/p.total*100,0,100) }))
+    .sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const pcts = papers.map(p=>p.pct);
+  const paperAvg = pcts.length ? statMean(pcts.slice(-5)) : null; // recent-5 average %
+  const mastery = papers.length ? (0.45*topicScore + 0.55*(paperAvg/100)) : topicScore; // blended 0..1
+  // Monte Carlo A* / A probability from the spread of real paper scores.
+  let pAStar = null, pA = null;
+  if(pcts.length){
+    const mu = statMean(pcts), sd = Math.max(6, statStdev(pcts));
+    const g = gaussSampler(dateSeed(todayIso()) + n*7 + Math.round(mu));
+    const N = 1500; let aStar=0, a=0;
+    for(let i=0;i<N;i++){ const x = clamp(g(mu,sd),0,100); if(x>=ASTAR_BOUNDARY) aStar++; if(x>=A_BOUNDARY) a++; }
+    pAStar = aStar/N; pA = a/N;
+  }
+  const effortMins = (P().studyLog||[]).filter(l=>l.subj===c).reduce((x,y)=>x+(y.mins||0),0);
+  return { code:c, name:subj.name, topicCount:n, tp, topicsDone, topicsLearning, topicScore,
+    mastery, masteryPct: clamp(mastery*100,0,100), papers, pcts, paperAvg, paperCount: papers.length,
+    pAStar, pA, effortMins, effortHrs: effortMins/60, flashcards: st.flashcards||[] };
+}
+
+// Aggregate snapshot consumed by every widget on the analytics terminal.
+function computeAnalytics(){
+  const p = P(); const enrolled = enrolledSubjects();
+  const subjects = enrolled.map(subjStats);
+  const masteryPct = subjects.length ? statMean(subjects.map(s=>s.masteryPct)) : 0;
+  const withPapers = subjects.filter(s=>s.paperCount>0);
+  const aStarProb = withPapers.length ? statMean(withPapers.map(s=>s.pAStar))*100 : null;
+  const log = p.studyLog||[];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const minsInRange = (from,to)=> log.filter(l=>{ const diff=Math.round((today-new Date(l.date))/86400000); return diff>=from && diff<to; }).reduce((a,b)=>a+(b.mins||0),0);
+  const last7 = minsInRange(0,7), prev7 = minsInRange(7,14);
+  const velocity = last7/7/60, velPrev = prev7/7/60; // study hrs/day
+  const velDelta = velPrev>0 ? (velocity-velPrev)/velPrev*100 : (velocity>0?100:0);
+  const minsToday = minsInRange(0,1);
+  // SRS retention from Leitner box distribution across all flashcards.
+  const allCards = subjects.flatMap(s=>s.flashcards);
+  const boxRecall = {1:0.40,2:0.55,3:0.70,4:0.85,5:0.95};
+  let retention=null, matureFrac=0;
+  if(allCards.length){ retention = statMean(allCards.map(c=>boxRecall[c.box||1]||0.4))*100; matureFrac = allCards.filter(c=>(c.box||1)>=4).length/allCards.length; }
+  const allPcts = subjects.flatMap(s=>s.pcts);
+  const deviation = allPcts.length>1 ? statStdev(allPcts) : null;
+  const volatility = deviation==null ? '—' : deviation<8 ? 'LOW' : deviation<16 ? 'MED' : 'HIGH';
+  const daysLeft = Math.max(0, daysBetween(todayIso(), p.examDate || p.deadline || todayIso()));
+  const timePress = clamp(1 - daysLeft/120, 0.05, 1);
+  const burnRisk = clamp((1 - masteryPct/100) * timePress * 100, 0, 100);
+  return { enrolled, subjects, masteryPct, aStarProb, last7, prev7, velocity, velPrev, velDelta,
+    minsToday, retention, matureFrac, deviation, volatility, daysLeft, burnRisk,
+    streak: p.streak||{count:0}, cardCount: allCards.length };
+}
+
+// Projected SRS retention over the next 30 days from the user's real card boxes.
+function drawDecayChart(A){
+  const canvas = $('#chart-decay'); if(!canvas) return;
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0,0,W,H);
+  const W = canvas.width, H = canvas.height; ctx.clearRect(0,0,W,H);
   const css = getComputedStyle(document.body);
   const hot = css.getPropertyValue('--hot').trim() || '#ff8800';
   const muted = css.getPropertyValue('--muted').trim() || '#666';
   const line = css.getPropertyValue('--line').trim() || '#1f1f1f';
-
-  // Draw exponential decay curve
+  const padL=40, padR=14, padT=14, padB=22, ch=H-padT-padB, cwd=W-padL-padR;
   ctx.strokeStyle = line; ctx.lineWidth = 1;
   for(let i=0;i<=4;i++){
-    const y = 14 + ((H-44) * i/4);
-    ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(W-14, y); ctx.stroke();
-    ctx.fillStyle = muted; ctx.font = '10px JetBrains Mono';
-    ctx.fillText((100 - i*25) + '%', 2, y+3);
+    const y = padT + ch*i/4;
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+    ctx.fillStyle = muted; ctx.font='10px JetBrains Mono'; ctx.fillText((100-i*25)+'%', 2, y+3);
   }
-
-  ctx.beginPath();
-  ctx.strokeStyle = hot;
-  ctx.lineWidth = 2;
-  const pts = 50;
-  for(let i=0; i<=pts; i++) {
-    const x = 40 + (i/pts)*(W-54);
-    // Ebbinghaus forgetting curve approximation
-    const R = Math.exp(-i/10); 
-    const y = 14 + (1-R)*(H-44);
-    if(i===0) ctx.moveTo(x,y);
-    else ctx.lineTo(x,y);
+  const DAYS = 30;
+  [0,10,20,30].forEach(d=>{ const x=padL+cwd*d/DAYS; ctx.fillStyle=muted; ctx.font='10px JetBrains Mono'; ctx.fillText(d+'d', x-6, H-6); });
+  const cards = (A?A.subjects:[]).flatMap(s=>s.flashcards||[]);
+  const boxStab = {1:1,2:3,3:7,4:16,5:35}; // days-to-decay per Leitner box
+  const haveCards = cards.length>0;
+  ctx.beginPath(); ctx.strokeStyle = hot; ctx.lineWidth = 2;
+  for(let i=0;i<=DAYS;i++){
+    const R = haveCards ? statMean(cards.map(c=>Math.exp(-i/(boxStab[c.box||1]||1)))) : Math.exp(-i/7);
+    const x = padL + cwd*i/DAYS, y = padT + (1-R)*ch;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   }
   ctx.stroke();
+  ctx.fillStyle = muted; ctx.font='9px JetBrains Mono';
+  ctx.fillText(haveCards ? (cards.length+' cards · projected recall') : 'model — add flashcards for a live curve', padL+2, padT+9);
 }
 
-function drawRadarChart(){
-  const canvas = $('#chart-radar');
-  if(!canvas) return;
+function drawRadarChart(A){
+  const canvas = $('#chart-radar'); if(!canvas) return;
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0,0,W,H);
+  const W = canvas.width, H = canvas.height; ctx.clearRect(0,0,W,H);
   const css = getComputedStyle(document.body);
   const accent = css.getPropertyValue('--accent').trim() || '#ff0033';
   const ink = css.getPropertyValue('--ink').trim() || '#fff';
   const line = css.getPropertyValue('--line').trim() || '#1f1f1f';
-  
-  const enrolled = enrolledSubjects();
-  if(enrolled.length < 3) {
-    ctx.fillStyle = ink; ctx.font = '12px JetBrains Mono';
-    ctx.textAlign = 'center'; ctx.fillText('NEED MIN 3 SUBJECTS FOR RADAR', W/2, H/2);
-    return;
-  }
-
-  const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 30;
-  const sides = enrolled.length;
-  
-  // Draw web
-  ctx.strokeStyle = line;
-  for(let i=1; i<=4; i++){
-    ctx.beginPath();
-    const curR = (r/4)*i;
-    for(let s=0; s<=sides; s++){
-      const ang = (s/sides) * 2 * Math.PI - Math.PI/2;
-      const x = cx + Math.cos(ang)*curR;
-      const y = cy + Math.sin(ang)*curR;
-      if(s===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    }
-    ctx.stroke();
-  }
-
-  // Draw axes & labels
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '10px JetBrains Mono';
-  enrolled.forEach((c, i) => {
-    const subj = SYLLABI[c];
-    const ang = (i/sides) * 2 * Math.PI - Math.PI/2;
-    ctx.beginPath(); ctx.moveTo(cx,cy);
-    ctx.lineTo(cx + Math.cos(ang)*r, cy + Math.sin(ang)*r); ctx.stroke();
-    
-    ctx.fillStyle = ink;
-    ctx.fillText(subj.code, cx + Math.cos(ang)*(r+15), cy + Math.sin(ang)*(r+15));
-  });
-
-  // Draw data polygon
-  ctx.beginPath();
-  ctx.strokeStyle = accent; ctx.fillStyle = 'rgba(255, 0, 51, 0.2)';
-  ctx.lineWidth = 2;
-  enrolled.forEach((c, i) => {
-    const subj = SYLLABI[c];
-    const st = getSubjState(c);
-    const ang = (i/sides) * 2 * Math.PI - Math.PI/2;
-    
-    let done = 0;
-    if(st && st.topicProgress) {
-       done = st.topicProgress.filter(v => v > 0).length;
-    }
-    const total = subj.topics.length;
-    const val = total ? (done / total) : 0.1;
-    
-    const x = cx + Math.cos(ang)*(r*val);
-    const y = cy + Math.sin(ang)*(r*val);
-    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-  });
-  ctx.closePath();
-  ctx.fill(); ctx.stroke();
-}
-
-function drawScatterChart() {
-  const canvas = $('#chart-scatter');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0,0,W,H);
-  
-  const css = getComputedStyle(document.body);
-  const accent = css.getPropertyValue('--accent').trim() || '#ff0033';
-  const cy = css.getPropertyValue('--cy').trim() || '#00ffff';
-  const line = css.getPropertyValue('--line').trim() || '#1f1f1f';
   const muted = css.getPropertyValue('--muted').trim() || '#666';
 
-  // Axes
-  ctx.strokeStyle = line; ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(30, 10); ctx.lineTo(30, H-20); ctx.lineTo(W-10, H-20);
-  ctx.stroke();
+  const subjects = (A?A.subjects:[]);
+  if(subjects.length < 3){
+    ctx.fillStyle = muted; ctx.font = '11px JetBrains Mono';
+    ctx.textAlign = 'center'; ctx.fillText('NEED ≥3 SUBJECTS FOR RADAR', W/2, H/2);
+    ctx.textAlign = 'left'; return;
+  }
+  const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 32, sides = subjects.length;
 
-  ctx.fillStyle = muted; ctx.font = '10px JetBrains Mono';
-  ctx.fillText('EFFORT (Hrs)', W/2, H-5);
-  ctx.save();
-  ctx.translate(15, H/2);
-  ctx.rotate(-Math.PI/2);
-  ctx.fillText('YIELD (%)', 0, 0);
-  ctx.restore();
+  // concentric web
+  ctx.strokeStyle = line;
+  for(let ring=1; ring<=4; ring++){
+    ctx.beginPath(); const cr = (r/4)*ring;
+    for(let s=0; s<=sides; s++){ const ang=(s/sides)*2*Math.PI-Math.PI/2; const x=cx+Math.cos(ang)*cr, y=cy+Math.sin(ang)*cr; if(s===0)ctx.moveTo(x,y);else ctx.lineTo(x,y); }
+    ctx.stroke();
+  }
+  // axes + labels (code + mastery %)
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  subjects.forEach((s, i) => {
+    const ang = (i/sides)*2*Math.PI - Math.PI/2;
+    ctx.strokeStyle = line; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(ang)*r, cy+Math.sin(ang)*r); ctx.stroke();
+    ctx.fillStyle = ink; ctx.font = '10px JetBrains Mono'; ctx.fillText(s.code, cx+Math.cos(ang)*(r+16), cy+Math.sin(ang)*(r+16)-4);
+    ctx.fillStyle = muted; ctx.font = '9px JetBrains Mono'; ctx.fillText(Math.round(s.masteryPct)+'%', cx+Math.cos(ang)*(r+16), cy+Math.sin(ang)*(r+16)+7);
+  });
+  // blended-mastery polygon
+  ctx.beginPath(); ctx.strokeStyle = accent; ctx.fillStyle = 'rgba(255,0,51,0.18)'; ctx.lineWidth = 2;
+  subjects.forEach((s, i) => {
+    const ang = (i/sides)*2*Math.PI - Math.PI/2; const val = clamp(s.masteryPct/100, 0.02, 1);
+    const x = cx+Math.cos(ang)*(r*val), y = cy+Math.sin(ang)*(r*val);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
 
-  // Real scatter points based on topics and study logs
-  const enrolled = enrolledSubjects();
-  const logs = P().studyLog || [];
-  
-  enrolled.forEach(c => {
-    const subj = SYLLABI[c];
-    const st = getSubjState(c);
-    // calculate effort (total mins spent)
-    const subjLogs = logs.filter(l => l.subj === c);
-    const effort = subjLogs.reduce((a, b) => a + b.mins, 0) / 60; // in hours
-    
-    // calculate yield (% of topics done)
-    let done = 0;
-    if(st && st.topicProgress) {
-       done = st.topicProgress.filter(v => v > 0).length;
-    }
-    const total = subj.topics.length;
-    let yield_ = total ? (done / total) : 0;
-    
-    // Map to canvas
-    const maxEffort = Math.max(10, effort * 1.5); // auto-scale
-    const x = 40 + Math.min((effort / maxEffort), 1) * (W - 60);
-    const y = (H - 30) - (yield_ * (H - 40));
-    
-    ctx.beginPath();
-    ctx.arc(x, y, 6, 0, 2*Math.PI);
-    ctx.fillStyle = yield_ > 0.5 ? cy : accent; 
+function drawScatterChart(A){
+  const canvas = $('#chart-scatter'); if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height; ctx.clearRect(0,0,W,H);
+  const css = getComputedStyle(document.body);
+  const accent = css.getPropertyValue('--accent').trim() || '#ff0033';
+  const cyv = css.getPropertyValue('--cy').trim() || '#00ffff';
+  const ink = css.getPropertyValue('--ink').trim() || '#fff';
+  const line = css.getPropertyValue('--line').trim() || '#1f1f1f';
+  const muted = css.getPropertyValue('--muted').trim() || '#666';
+  const padL=34, padB=24, padT=12, padR=14, ch=H-padT-padB, cwd=W-padL-padR;
+
+  ctx.strokeStyle = line; ctx.lineWidth = 1; ctx.beginPath();
+  ctx.moveTo(padL, padT); ctx.lineTo(padL, H-padB); ctx.lineTo(W-padR, H-padB); ctx.stroke();
+  ctx.fillStyle = muted; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'center';
+  ctx.fillText('EFFORT (hrs)', W/2, H-4);
+  ctx.save(); ctx.translate(10, H/2); ctx.rotate(-Math.PI/2); ctx.fillText('MASTERY %', 0, 0); ctx.restore();
+  ctx.textAlign = 'left';
+
+  const subjects = (A?A.subjects:[]);
+  if(!subjects.length){ ctx.fillStyle = muted; ctx.fillText('no subjects', W/2-24, H/2); return; }
+  const maxEffort = Math.max(2, ...subjects.map(s=>s.effortHrs));
+  subjects.forEach(s => {
+    const x = padL + (s.effortHrs/maxEffort)*cwd;
+    const y = (H-padB) - (clamp(s.masteryPct,0,100)/100)*ch;
+    ctx.beginPath(); ctx.arc(x, y, 6, 0, 2*Math.PI);
+    ctx.fillStyle = s.masteryPct>=60 ? cyv : (s.masteryPct>=35 ? '#ff8800' : accent);
     ctx.fill();
-    
-    // Label
-    ctx.fillStyle = ink; ctx.font = '9px JetBrains Mono';
-    ctx.fillText(subj.code, x + 8, y + 3);
+    ctx.fillStyle = ink; ctx.font = '9px JetBrains Mono'; ctx.fillText(s.code, x+8, y+3);
   });
 }
 
-function renderScreener() {
-  const tbody = $('#screener-tbody');
-  if(!tbody) return;
-  const enrolled = enrolledSubjects();
-  const logs = P().studyLog || [];
-  
-  if(enrolled.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="padding:4px; color:var(--muted);">No active subjects to screen.</td></tr>';
-    return;
-  }
-  
-  let rowsHtml = '';
-  enrolled.forEach(c => {
-    const subj = SYLLABI[c];
-    const st = getSubjState(c);
-    
-    // find weakest topics
-    if(!st || !st.topicProgress) return;
-    
-    const weakIndices = [];
-    st.topicProgress.forEach((val, i) => {
-      if(val < 2) weakIndices.push(i);
-    });
-    
-    // pick up to 2 weak topics per subject to show in screener
-    const topWeak = weakIndices.slice(0, 2);
-    
-    topWeak.forEach(topicIdx => {
-      const topicName = subj.topics[topicIdx];
-      const isCritical = st.topicProgress[topicIdx] === 0;
-      const masteryPct = isCritical ? '0%' : '50%';
-      const srsInt = isCritical ? '0d [CRIT]' : '+1d';
-      const yieldEst = isCritical ? '<span style="color:#0f0;">HIGH</span>' : 'MED';
-      const colorCls = isCritical ? 'var(--warn)' : '#0f0';
-      const intColor = isCritical ? 'var(--accent)' : 'inherit';
-      
-      rowsHtml += `
-        <tr style="border-bottom: 1px dotted var(--dim);">
-          <td style="padding: 4px; color: var(--cy);">${subj.code}.T${topicIdx+1}</td>
-          <td style="padding: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHTML(topicName)}</td>
-          <td style="padding: 4px; color: ${colorCls};">${masteryPct}</td>
-          <td style="padding: 4px; color: ${intColor};">${srsInt}</td>
-          <td style="padding: 4px;">${yieldEst}</td>
-        </tr>
-      `;
+// Rank every weak topic by study YIELD = (1 - mastery) boosted by logged mistakes.
+function renderScreener(A){
+  const tbody = $('#screener-tbody'); if(!tbody) return;
+  const subjects = (A?A.subjects:[]);
+  if(!subjects.length){ tbody.innerHTML = '<tr><td colspan="5" style="padding:4px;color:var(--muted)">No active subjects to screen.</td></tr>'; return; }
+  const rows = [];
+  subjects.forEach(s => {
+    const subj = SYLLABI[s.code];
+    const mistakesByTopic = (getSubjState(s.code).mistakes||[]);
+    s.tp.forEach((v, i) => {
+      const mastery = v/2; // 0 / .5 / 1
+      const mistakes = mistakesByTopic.filter(m=>m.topicIdx===i).length;
+      const yieldScore = (1-mastery)*(1+mistakes*0.6);
+      if(yieldScore<=0) return; // fully mastered, no open mistakes
+      rows.push({ code:s.code, idx:i, name:subj.topics[i], mastery, mistakes, yieldScore, v });
     });
   });
-  
-  if(rowsHtml === '') rowsHtml = '<tr><td colspan="5" style="padding:4px; color:var(--muted);">All tracked topics mastered.</td></tr>';
-  tbody.innerHTML = rowsHtml;
+  rows.sort((a,b)=> b.yieldScore - a.yieldScore);
+  const top = rows.slice(0, 12);
+  if(!top.length){ tbody.innerHTML = '<tr><td colspan="5" style="padding:4px;color:var(--muted)">All tracked topics mastered.</td></tr>'; return; }
+  tbody.innerHTML = top.map(r => {
+    const masteryPct = Math.round(r.mastery*100);
+    const srs = r.v===0 ? '<span style="color:var(--accent)">now·CRIT</span>' : r.v===1 ? '+2d' : '+7d';
+    const yieldTag = r.yieldScore>=1.2 ? '<span style="color:#0f0">HIGH</span>' : r.yieldScore>=0.6 ? '<span style="color:var(--warn)">MED</span>' : 'LOW';
+    const mColor = masteryPct>=66 ? '#0f0' : masteryPct>=33 ? 'var(--warn)' : 'var(--accent)';
+    return `<tr style="border-bottom:1px dotted var(--dim)">
+      <td style="padding:4px;color:var(--cy)">${r.code}.T${r.idx+1}</td>
+      <td style="padding:4px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(r.name)}${r.mistakes?` <span style="color:var(--warn)">⚠${r.mistakes}</span>`:''}</td>
+      <td style="padding:4px;color:${mColor}">${masteryPct}%</td>
+      <td style="padding:4px">${srs}</td>
+      <td style="padding:4px">${yieldTag}</td>
+    </tr>`;
+  }).join('');
 }
 
 function renderStatsCharts(){
-  // weekly time chart
-  drawTimeChart();
-  drawScoreChart();
-  drawHeatmap();
-  drawMasteryMap();
-  drawDecayChart();
-  drawRadarChart();
-  drawScatterChart();
-  renderScreener();
+  const A = computeAnalytics();
+  updateStatCards(A);
+  updateTicker(A);
+  drawTimeChart(A);
+  drawScoreChart(A);
+  drawHeatmap(A);
+  drawMasteryMap(A);
+  drawDecayChart(A);
+  drawRadarChart(A);
+  drawScatterChart(A);
+  renderScreener(A);
   startLiveTicker();
 }
 
@@ -5087,22 +5262,26 @@ function drawHeatmap(){
   }
 }
 
-function drawMasteryMap(){
-  const wrap = $('#mastery-map');
-  if(!wrap) return;
-  const enrolled = enrolledSubjects();
-  if(enrolled.length === 0){ wrap.innerHTML = '<p class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px">no subjects.</p>'; return; }
-  wrap.innerHTML = enrolled.map(c => {
-    const s = SYLLABI[c];
-    const st = getSubjState(c);
-    return `<div style="margin-bottom:14px">
-      <div style="font-family:var(--display);font-size:12px;text-transform:lowercase;color:var(--ink);margin-bottom:6px">${s.code} · ${s.name}</div>
+function drawMasteryMap(A){
+  const wrap = $('#mastery-map'); if(!wrap) return;
+  const subjects = (A?A.subjects:[]);
+  if(!subjects.length){ wrap.innerHTML = '<p class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px">no subjects.</p>'; return; }
+  wrap.innerHTML = subjects.map(s => {
+    const subj = SYLLABI[s.code];
+    const trend = s.paperCount>=2 ? (s.pcts[s.pcts.length-1] - s.pcts[s.pcts.length-2]) : null;
+    const trendTag = trend==null ? '' : `<span style="color:${trend>=0?'#0f0':'var(--warn)'}">${trend>=0?'▲':'▼'}${Math.abs(trend).toFixed(0)}%</span>`;
+    const mPct = Math.round(s.masteryPct);
+    const barColor = mPct>=66 ? 'var(--ok)' : mPct>=33 ? 'var(--warn)' : 'var(--accent)';
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <span style="font-family:var(--term);font-size:12px;color:var(--ink)">${s.code} · ${escapeHTML(subj.name)}</span>
+        <span style="font-family:var(--term);font-size:11px;color:${barColor}">${mPct}% ${trendTag} ${s.paperCount?`<span class="muted" style="font-size:9px">${s.paperCount}p</span>`:''}</span>
+      </div>
+      <div style="height:6px;background:var(--bg-3);border:1px solid var(--line);margin-bottom:4px">
+        <div style="height:100%;width:${clamp(mPct,0,100)}%;background:${barColor}"></div>
+      </div>
       <div style="display:flex;gap:2px;flex-wrap:wrap">
-        ${s.topics.map((t,i)=>{
-          const v = st.topicProgress[i] || 0;
-          const bg = v === 2 ? 'var(--ok)' : v === 1 ? 'var(--warn)' : 'var(--bg-3)';
-          return `<div style="width:14px;height:14px;background:${bg};border:1px solid var(--line)" title="${escapeHTML(t)}"></div>`;
-        }).join('')}
+        ${s.tp.map((v,i)=>{ const bg = v>=2 ? 'var(--ok)' : v===1 ? 'var(--warn)' : 'var(--bg-3)'; return `<div style="width:12px;height:12px;background:${bg};border:1px solid var(--line)" title="${escapeHTML(subj.topics[i])}"></div>`; }).join('')}
       </div>
     </div>`;
   }).join('');
@@ -6506,6 +6685,16 @@ renderSubjDetail = function(){
       e.stopPropagation();
       openNotesDrawer(subjActive, idx, s.topics[idx]);
     });
+
+    const viz = document.createElement('span');
+    viz.className = 'topic-viz-btn';
+    viz.textContent = '◊';
+    viz.title = 'visualize this topic as a diagram';
+    item.querySelector('.topic-name').appendChild(viz);
+    viz.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      openDiagramModal(s.topics[idx], subjActive);
+    });
   });
 };
 
@@ -6859,6 +7048,7 @@ function wireEvents(){
   $('#chat-file-input').addEventListener('change', handleChatFileSelect);
   $('#chat-mic').addEventListener('click', toggleVoiceInput);
   $('#chat-yt').addEventListener('click', toggleYoutubeLoader);
+  const cvz = $('#chat-visualize'); if(cvz) cvz.addEventListener('click', visualizeFromChat);
 
   // Notes drawer events
   $('#ctx-drawer-close').addEventListener('click', closeNotesDrawer);
@@ -6872,6 +7062,220 @@ function wireEvents(){
   window.addEventListener('online', updateStatusBar);
   window.addEventListener('offline', updateStatusBar);
 }
+
+// ============================================================
+// DIAGRAM ENGINE — generate exam-focused SVG diagrams via the LLM.
+// Adapted from the Next.js/Anthropic/Supabase spec to SIEGE's stack:
+// Groq (the app's existing key) instead of Anthropic, localStorage instead of Supabase.
+// ============================================================
+const DIAGRAM_SYS = `You are a diagram engine for an IGCSE study platform. You generate raw SVG code and ONLY raw SVG code — no markdown, no explanation, no backticks. Just the <svg>...</svg> element.
+
+RULES:
+- ViewBox: always "0 0 680 {height}" where height fits content tightly
+- Background: transparent (the host app provides the dark background)
+- Colors: use these exact hex values for the dark terminal theme:
+  - Primary stroke/text: #4ade80 (terminal green)
+  - Secondary text: #22c55e80 (muted green)
+  - Accent: #10b981 (bright green)
+  - Warning/highlight: #f59e0b (amber)
+  - Error/danger: #ef4444 (red)
+  - Subtle lines/grid: #1a3a1a (dark green)
+  - Labels: #86efac (light green)
+- Font: monospace for all text (font-family="monospace")
+- Font sizes: 14px for titles/labels, 12px for subtitles/annotations
+- Stroke widths: 0.5px for borders, 1-2px for main diagram lines
+- All text must use fill not color
+- No gradients, no shadows, no filters, no blur
+- Include <title> and <desc> for accessibility
+
+DIAGRAM TYPES BY SUBJECT:
+
+Physics:
+- Wave traces (oscilloscope style): sine waves with labeled amplitude, wavelength, frequency
+- Circuit diagrams: standard circuit symbols (resistor zigzag, cell, ammeter, voltmeter)
+- Ray diagrams: reflection, refraction, lens diagrams with normal lines and angles
+- Force diagrams: arrows with labeled magnitudes, free body diagrams
+- Pressure/gas diagrams: particle models showing compression, expansion
+- Energy transfer diagrams: Sankey-style flow diagrams
+
+Biology:
+- Cell diagrams: plant/animal cells with labeled organelles as simple shapes
+- Body system diagrams: heart cross-sections, lung alveoli, nephron, eye
+- Food chains/webs: organisms connected with arrows showing energy flow
+- Enzyme diagrams: lock-and-key / induced fit models
+- DNA/genetics: simple double helix, Punnett squares as grids
+- Leaf cross-sections: palisade, spongy mesophyll, stomata
+
+Chemistry:
+- Atomic structure: electron shell diagrams (2,8,8 pattern)
+- Bonding diagrams: dot-and-cross for ionic/covalent
+- Apparatus setups: distillation, electrolysis, gas collection
+- Periodic table highlights: sections/groups colored
+- Reaction energy profiles: activation energy curves
+- Chromatography diagrams: paper with solvent front and spots
+
+Mathematics:
+- Coordinate geometry: plotted points, lines, curves on axes
+- Geometric constructions: angles, bisectors, parallel lines
+- Transformation diagrams: reflection, rotation, translation, enlargement
+- Trigonometry: right triangles with labeled sides (O, A, H)
+- Graphs: quadratic, cubic, reciprocal, exponential curves
+- Venn diagrams: 2-3 set overlapping circles with regions labeled
+- Circle theorems: circles with labeled angles, tangents, chords
+
+Business Studies:
+- Organizational charts: hierarchy trees
+- Supply/demand curves: crossing lines with equilibrium
+- Break-even charts: cost/revenue lines with break-even point
+- Product life cycle: the classic curve with stages labeled
+- Cash flow diagrams: bar charts showing inflow/outflow
+
+Geography:
+- Water cycle / rock cycle: circular process diagrams
+- Cross-sections: river valleys, volcanoes, tectonic boundaries
+- Population pyramids: horizontal bar charts
+- Weather diagrams: fronts, pressure systems
+
+RENDERING RULES:
+- Every shape must have explicit coordinates — no CSS positioning
+- Text always uses text-anchor="middle" unless it's a left-aligned label
+- Use dominant-baseline="central" on all text inside shapes
+- Arrows use a simple marker: <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round"/></marker>
+- For labeled parts, use leader lines (thin dashed lines from shape to label)
+- Keep diagrams simple and exam-focused — only include what IGCSE requires
+- Maximum 8-10 labeled parts per diagram
+- Leave 40px padding on all sides
+
+SINE WAVE RENDERING:
+Never draw waves with fewer than 100 points. Generate the path programmatically using this pattern:
+- For a smooth sine wave, use quadratic bezier curves (Q): one Q command per half-cycle, alternating above and below the center line.
+- Example for 3 complete waves, amplitude 50, center y=150, spanning x=60 to x=600:
+  M60 150 Q105 100, 150 150 Q195 200, 240 150 Q285 100, 330 150 Q375 200, 420 150 Q465 100, 510 150 Q555 200, 600 150
+- The control point y = centerY ∓ (amplitude × 1.33) to get a true sine shape from quadratic beziers.
+- NEVER use freehand-style paths with random wobble or many short L segments.
+
+LABELING RULES FOR WAVES:
+- Amplitude: vertical double-arrow from the center line to the peak, placed on the first crest, label to the left.
+- Wavelength: horizontal double-arrow from one crest to the next crest, placed below the wave with 20px clearance.
+- Center/rest line: thin dashed line across the full width.
+- Direction arrow: single arrow BELOW the wavelength label, not overlapping the wave itself.`;
+
+function buildDiagramPrompt(topic, subject){
+  const s = SYLLABI[subject];
+  const subjLabel = s ? `${s.code} ${s.name}` : subject;
+  return `Subject: ${subjLabel}\nTopic: "${topic}"\nGenerate the IGCSE exam-focused SVG diagram that best explains this topic. Output ONLY the <svg> element.`;
+}
+
+// --- localStorage cache (replaces the Supabase diagram_cache table) ---
+function diagKey(subject, topic){ return (subject||'') + '|' + String(topic||'').toLowerCase().trim().replace(/\s+/g,' '); }
+function diagramCacheGet(subject, topic){
+  try { return (JSON.parse(localStorage.getItem('siege_diagram_cache')||'{}'))[diagKey(subject,topic)] || null; }
+  catch(e){ return null; }
+}
+function diagramCacheSet(subject, topic, svg){
+  try {
+    const c = JSON.parse(localStorage.getItem('siege_diagram_cache')||'{}');
+    c[diagKey(subject,topic)] = svg;
+    localStorage.setItem('siege_diagram_cache', JSON.stringify(c));
+  } catch(e){ /* quota — fine, just won't cache */ }
+}
+
+// Extract + sanitise the model's SVG before it goes into innerHTML.
+function sanitizeSvg(raw){
+  if(!raw) return null;
+  const m = String(raw).match(/<svg[\s\S]*?<\/svg>/i);
+  if(!m) return null;
+  let svg = m[0];
+  svg = svg.replace(/<script[\s\S]*?<\/script>/gi, '');
+  svg = svg.replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, '');
+  svg = svg.replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');   // inline event handlers
+  svg = svg.replace(/(xlink:href|href)\s*=\s*("javascript:[^"]*"|'javascript:[^']*')/gi, '');
+  return svg;
+}
+
+async function generateDiagram(topic, subject, force){
+  if(!force){ const c = diagramCacheGet(subject, topic); if(c) return c; }
+  const p = P();
+  if(!p.apiKey) throw new Error('add your groq api key in settings first');
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization':'Bearer '+p.apiKey, 'Content-Type':'application/json' },
+    body: JSON.stringify({
+      model: p.model,
+      messages: [ { role:'system', content:DIAGRAM_SYS }, { role:'user', content:buildDiagramPrompt(topic, subject) } ],
+      temperature: 0.3, max_tokens: 4000,
+      ...reasoningParams(p.model)
+    })
+  });
+  if(!res.ok){ const t = await res.text(); throw new Error('groq ' + res.status + ': ' + t.slice(0,120)); }
+  const j = await res.json();
+  const svg = sanitizeSvg(j.choices?.[0]?.message?.content || '');
+  if(!svg) throw new Error('model did not return valid SVG — hit ↻ to regenerate');
+  diagramCacheSet(subject, topic, svg);
+  return svg;
+}
+
+// The viewer (replaces the React <DiagramViewer/>): subject + topic inputs, loading, error/retry, regenerate.
+function openDiagramModal(presetTopic, presetSubject){
+  const enrolled = enrolledSubjects();
+  const subjOpts = enrolled.length ? enrolled : ['0625','0620','0610','0580','0455'];
+  const defaultSubj = (presetSubject && SYLLABI[presetSubject]) ? presetSubject : (enrolled[0] || subjOpts[0]);
+  const ex = document.getElementById('diag-overlay'); if(ex) ex.remove();
+  const ov = document.createElement('div');
+  ov.id = 'diag-overlay'; ov.className = 'diag-overlay';
+  ov.innerHTML = `
+    <div class="diag-box">
+      <div class="diag-head">
+        <div class="diag-controls">
+          <span style="color:#10b981;font-size:11px;letter-spacing:.12em">◊ DIAGRAM</span>
+          <select id="diag-subj">${subjOpts.map(c=>`<option value="${c}" ${c===defaultSubj?'selected':''}>${SYLLABI[c]?SYLLABI[c].code+' · '+SYLLABI[c].name:c}</option>`).join('')}</select>
+          <input id="diag-topic" placeholder="topic to visualize…" value="${escapeHTML(presetTopic||'')}">
+          <button class="diag-btn" id="diag-render">render</button>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="diag-btn" id="diag-regen" title="regenerate (ignore cache)">↻</button>
+          <button class="diag-btn" id="diag-close" title="close">✕</button>
+        </div>
+      </div>
+      <div class="diag-stage" id="diag-stage"><div class="diag-scan"></div><div style="color:#22c55e;font-size:12px">enter a topic and hit render</div></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const stage = ov.querySelector('#diag-stage');
+  const run = async (force) => {
+    const subject = ov.querySelector('#diag-subj').value;
+    const topic = ov.querySelector('#diag-topic').value.trim();
+    if(!topic){ toast('enter a topic to visualize', 2500, true); return; }
+    stage.innerHTML = `<div class="diag-scan"></div><div class="diag-loading">// RENDERING…</div>`;
+    try {
+      const svg = await generateDiagram(topic, subject, force);
+      stage.innerHTML = `<div class="diag-scan"></div>` + svg;
+    } catch(e){
+      stage.innerHTML = `<div class="diag-scan"></div><div class="diag-err">⚠ ${escapeHTML(e.message)}<br><button class="diag-btn" id="diag-retry" style="margin-top:12px">retry</button></div>`;
+      const rb = stage.querySelector('#diag-retry'); if(rb) rb.onclick = ()=>run(true);
+    }
+  };
+  ov.querySelector('#diag-render').onclick = ()=>run(false);
+  ov.querySelector('#diag-regen').onclick = ()=>run(true);
+  ov.querySelector('#diag-close').onclick = ()=>ov.remove();
+  ov.querySelector('#diag-topic').addEventListener('keydown', e=>{ if(e.key==='Enter') run(false); });
+  ov.addEventListener('click', e=>{ if(e.target===ov) ov.remove(); });
+  if(presetTopic && presetTopic.trim()) run(false);
+}
+window.openDiagramModal = openDiagramModal;
+
+// Entry points: pull a sensible topic+subject from wherever the student is studying.
+function visualizeFromChat(){
+  const hist = P().chatByMode[aiMode] || [];
+  const lastUser = [...hist].reverse().find(m => m.role === 'user' && m.content);
+  const topic = lastUser ? lastUser.content.replace(/\s+/g,' ').trim().slice(0,140) : '';
+  const subj = aiMode === 'chem' ? '0620' : (paperFilters.subj || enrolledSubjects()[0] || '');
+  openDiagramModal(topic, subj);
+}
+function visualizeFromNotes(){
+  const subj = ($('#notes-subj') && $('#notes-subj').value) || enrolledSubjects()[0] || '';
+  openDiagramModal('', subj);
+}
+window.visualizeFromNotes = visualizeFromNotes;
 
 // boot
 loadStore();
@@ -6908,7 +7312,7 @@ function renderVaultGrid(papers) {
 }
 
 function fetchVaultPapers() {
-  fetch('http://localhost:8080/api/papers')
+  fetch(API_BASE + '/api/papers')
     .then(r => r.json())
     .then(data => renderVaultGrid(data.papers))
     .catch(e => console.error('Vault fetch error:', e));
@@ -6918,7 +7322,7 @@ function uploadVaultPaper(file) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const dataUrl = e.target.result;
-    fetch('http://localhost:8080/api/upload', {
+    fetch(API_BASE + '/api/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ filename: file.name, data: dataUrl })
@@ -6931,7 +7335,7 @@ function uploadVaultPaper(file) {
 
 window.deleteVaultPaper = function(filename) {
   if(!confirm('Delete this paper?')) return;
-  fetch('http://localhost:8080/api/delete', {
+  fetch(API_BASE + '/api/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ filename })
@@ -6970,7 +7374,7 @@ async function fetchObsidianTasks() {
   if(!container) return;
   container.innerHTML = '<span class="muted">syncing with obsidian...</span>';
   try {
-    const res = await fetch('http://localhost:8080/api/obsidian/tasks');
+    const res = await fetch(API_BASE + '/api/obsidian/tasks');
     const data = await res.json();
     if(data.tasks && data.tasks.length > 0) {
       container.innerHTML = data.tasks.map(t => {
@@ -6991,7 +7395,7 @@ async function fetchObsidianTasks() {
 
 async function toggleObsidianTask(file, lineIdx, done) {
   try {
-    await fetch('http://localhost:8080/api/obsidian/update_task', {
+    await fetch(API_BASE + '/api/obsidian/update_task', {
       method: 'POST',
       body: JSON.stringify({ file, line_idx: lineIdx, done })
     });
@@ -7005,17 +7409,31 @@ window.addEventListener('load', () => {
   if (document.getElementById('obsidian-tasks')) fetchObsidianTasks();
 });
 
+// Each card a student gets for a topic is a REAL topic-question set — past-paper questions
+// compiled for exactly that topic (PMT / Save My Exams etc.). Opens the topic, nothing else.
+function paperSearchLinks(subj, topic){
+  const code = subj.code, name = subj.name;
+  const g = q => 'https://www.google.com/search?q=' + encodeURIComponent(q);
+  return [
+    { src:'Phys & Maths Tutor', label:`${topic} · topic questions`, url: g(`site:physicsandmathstutor.com ${name} ${topic} topic questions`) },
+    { src:'Save My Exams', label:`${topic} · topic questions`, url: g(`site:savemyexams.com igcse ${name} ${topic} topic questions`) },
+    { src:'Dynamic Papers', label:`${topic} · in ${code} past papers`, url: g(`site:dynamicpapers.com ${code} ${topic}`) },
+    { src:'Xtreme Papers', label:`${topic} · in ${code} past papers`, url: g(`site:xtremepapers.com ${code} ${name} ${topic}`) },
+    { src:'ZNotes', label:`${topic} · notes & questions`, url: g(`site:znotes.org igcse ${name} ${topic}`) },
+    { src:'Google · all sites', label:`exact-topic past-paper questions`, url: g(`${code} ${name} "${topic}" past paper questions (site:physicsandmathstutor.com OR site:savemyexams.com OR site:dynamicpapers.com OR site:xtremepapers.com)`) }
+  ];
+}
+
 function openTopicSearchMode() {
-  const topic = prompt("Enter the specific topic you want past papers for (e.g. 'Electrolysis', 'Kinematics'):");
-  if (!topic) return;
-  go('ai');
-  setTimeout(() => {
-    const chatInput = document.getElementById('chat-input');
-    if (chatInput) {
-      chatInput.value = `I need the Question Paper (QP), Mark Scheme (MS), and SME for the specific topic: "${topic}". Please give me real, exact past paper codes that contain good questions on this topic and explain briefly what the questions cover.`;
-      document.getElementById('chat-send').click();
-    }
-  }, 100);
+  if(!paperFilters.subj || !SYLLABI[paperFilters.subj]){ toast('enroll in a subject first', 3000, true); return; }
+  const topic = prompt("Topic to pull past-paper questions for (e.g. 'Sound waves', 'Electrolysis'):");
+  if(!topic || !topic.trim()) return;
+  const t = topic.trim();
+  const subj = SYLLABI[paperFilters.subj];
+  paperFilters.paper = 'all'; paperFilters.year = 'all'; paperFilters.session = 'all'; paperFilters.status = 'all';
+  topicSearch = { topic: t, links: paperSearchLinks(subj, t) };   // instant — no AI guessing
+  renderPaperLibrary();
+  $('#papers-grid').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 
@@ -7031,7 +7449,7 @@ function bModal(title, body) {
   ov.innerHTML = `
     <div style="background:var(--bg);border:2px solid var(--accent);color:var(--ink);width:90%;max-width:600px;padding:24px;font-family:var(--term);box-shadow: 12px 12px 0px rgba(0,0,0,0.5);position:relative;">
       <h3 style="margin-top:0;margin-bottom:16px;color:var(--accent);text-transform:uppercase;">// ${escapeHTML(title)}</h3>
-      <div style="font-size:14px;line-height:1.6;margin-bottom:24px;white-space:pre-wrap;">${body}</div>
+      <div style="font-size:16px;line-height:1.7;font-weight:500;margin-bottom:24px;white-space:pre-wrap;">${body}</div>
       <div style="text-align:right;">
         <button class="btn hot" onclick="document.getElementById('b-modal').remove()">[ close ]</button>
       </div>
@@ -7059,14 +7477,15 @@ async function groqTask(sys, prompt, onChunk, onDone) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: p.model || 'llama3-8b-8192',
+        model: p.model || 'llama-3.1-8b-instant',
         messages: [
-          { role: 'system', content: sys },
+          { role: 'system', content: IGCSE_DIRECTIVE + '\n\n' + sys },
           { role: 'user', content: prompt }
         ],
         stream: true,
         temperature: 0.5,
-        max_tokens: 2048
+        max_tokens: 1600,
+        ...reasoningParams(p.model)
       })
     });
 
@@ -7116,7 +7535,7 @@ function streamModal(title, sysPrompt, userPrompt) {
   ov.innerHTML = `
     <div style="background:var(--bg);border:2px solid var(--accent);color:var(--ink);width:90%;max-width:600px;padding:24px;font-family:var(--term);box-shadow: 12px 12px 0px rgba(0,0,0,0.5);position:relative; max-height:80vh; display:flex; flex-direction:column;">
       <h3 style="margin-top:0;margin-bottom:16px;color:var(--accent);text-transform:uppercase;flex-shrink:0;">// ${escapeHTML(title)}</h3>
-      <div id="sm-out" style="font-size:12px;line-height:1.6;margin-bottom:24px;white-space:pre-wrap;flex-grow:1;overflow-y:auto;background:#050505;padding:12px;border:1px solid var(--dim);"></div>
+      <div id="sm-out" style="font-size:15px;line-height:1.7;font-weight:500;margin-bottom:24px;white-space:pre-wrap;flex-grow:1;overflow-y:auto;background:#050505;padding:14px;border:1px solid var(--dim);"></div>
       <div style="text-align:right;flex-shrink:0;">
         <button class="btn hot" onclick="document.getElementById('b-modal').remove()">[ close ]</button>
       </div>
@@ -7138,6 +7557,7 @@ function streamModal(title, sysPrompt, userPrompt) {
     out.scrollTop = out.scrollHeight;
   }, () => {
     out.innerHTML += '<br><br><span style="color:var(--ok)">[ PROCESS TERMINATED ]</span>';
+    typesetMath(out);
     out.scrollTop = out.scrollHeight;
   });
 }
@@ -7234,7 +7654,7 @@ function appAction(action) {
   } else if(action === 'heatmap') {
     streamModal('Session Heatmap', 'You are an efficiency analyzer.', 'Analyze this focus data and tell me when I was most efficient. Data: ' + JSON.stringify(p.studyLog));
   } else if(action === 'csv_export') {
-    fetch('http://localhost:8080/api/backend/export-csv', {
+    fetch(API_BASE + '/api/backend/export-csv', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({csv_data: "Date,Subject,Minutes\\n" + p.studyLog.map(l => `${l.date},${l.subj},${l.mins}`).join("\\n"), filename: "study_data.csv"})
@@ -7266,16 +7686,18 @@ function appAction(action) {
     bModal('Bulk Import CSV', 'Please drop your Quizlet export CSV into the Vault Dropzone. System will parse and convert to Siege Flashcards.');
   } else if(action === 'leech_hunter') {
     let count = 0;
-    p.flashcards.forEach(c => {
-      if(c.lapses >= 3 && !c.suspended) { c.suspended = true; count++; }
-    });
+    enrolledSubjects().forEach(c => getSubjState(c).flashcards.forEach(card => {
+      // a "leech" = stuck in the lowest Leitner box (or flagged by legacy lapses)
+      if(((card.lapses||0) >= 3 || (card.box||1) === 1) && !card.suspended) { card.suspended = true; count++; }
+    }));
     if(count > 0) save();
-    bModal('Leech Hunter', `Identified and suspended ${count} Leech Cards (Lapses >= 3).\\n\\nRewrite them or break them into smaller atomic facts.`);
+    bModal('Leech Hunter', `Identified and suspended ${count} Leech Cards (stuck in box 1).\\n\\nRewrite them or break them into smaller atomic facts.`);
   } else if(action === 'auto_gen_notes') {
     const noteText = (p.notes && activeNoteId && p.notes[activeNoteId]) ? p.notes[activeNoteId].text : 'No active note.';
     streamModal('Auto-Gen from Notes', 'Extract exact key-value pairs from this text that can be used as direct Anki imports. Format: Question | Answer.', noteText);
   } else if(action === 'cram_mode') {
-    toast(`CRAM MODE: SRS disabled. All ${p.flashcards.length} cards loaded into queue. Godspeed.`);
+    const total = enrolledSubjects().reduce((n,c)=> n + getSubjState(c).flashcards.length, 0);
+    toast(`CRAM MODE: SRS disabled. All ${total} cards loaded into queue. Godspeed.`);
   } else if(action === 'export_json') {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(P()));
     const el = document.createElement('a'); el.setAttribute("href", dataStr); el.setAttribute("download", "siege_profile.json");
@@ -7316,7 +7738,7 @@ function appAction(action) {
     loadPaper(file);
     appAction('timer_overlay');
   } else if(action === 'api_health') {
-    fetch('http://localhost:8080/api/backend/status').then(r=>r.json()).then(d => {
+    fetch(API_BASE + '/api/backend/status').then(r=>r.json()).then(d => {
       bModal('API Health Check', `Backend Status: ${d.status.toUpperCase()}\\nVersion: ${d.version}\\nGroq Key: ${P().apiKey ? 'Configured' : 'MISSING'}`);
     }).catch(e => bModal('API Error', 'Backend server is unreachable. Ensure server.py is running on port 8080.'));
   }
@@ -7368,7 +7790,7 @@ function handleDropFiles(files) {
     const reader = new FileReader();
     reader.onload = function(e) {
       const b64 = e.target.result;
-      fetch('http://localhost:8080/api/upload', {
+      fetch(API_BASE + '/api/upload', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ filename: file.name, data: b64 })
@@ -7376,7 +7798,7 @@ function handleDropFiles(files) {
         if(d.status === 'ok') {
           logDrop(`[SUCCESS] ${file.name} sorted to vault.`);
           // Reload papers list
-          fetch('http://localhost:8080/api/papers').then(res=>res.json()).then(dat => {
+          fetch(API_BASE + '/api/papers').then(res=>res.json()).then(dat => {
             window.allPapers = dat.papers;
             renderPapersList();
             

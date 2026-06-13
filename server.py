@@ -21,10 +21,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        if self.path.startswith('/api/'):
-            self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate')
+        self.send_header('Access-Control-Allow-Headers', '*')
+        # Let Chrome's Private Network Access permit file:// / LAN-IP pages to reach this local server.
+        self.send_header('Access-Control-Allow-Private-Network', 'true')
+        # Disable caching for everything (not just /api/) so edits to siege.html
+        # load immediately instead of the browser reusing a stale 304 copy.
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
         super().end_headers()
+
+    # Stop SimpleHTTPRequestHandler from answering with 304 Not Modified.
+    def send_header(self, keyword, value):
+        if keyword.lower() == 'last-modified':
+            return
+        super().send_header(keyword, value)
 
     def do_OPTIONS(self):
         self.send_response(200)
@@ -216,8 +227,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_response(404)
         self.end_headers()
 
-# Allow reuse of address to prevent "Address already in use" errors during dev
-socketserver.TCPServer.allow_reuse_address = True
-with socketserver.TCPServer(("", PORT), Handler) as httpd:
+# Threaded + address reuse so an upload happening during a papers/obsidian refresh
+# can't block or reset the connection (single-threaded would serialize them).
+socketserver.ThreadingTCPServer.allow_reuse_address = True
+socketserver.ThreadingTCPServer.daemon_threads = True
+with socketserver.ThreadingTCPServer(("", PORT), Handler) as httpd:
     print(f"Serving at port {PORT}")
     httpd.serve_forever()

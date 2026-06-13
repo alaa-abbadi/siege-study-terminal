@@ -458,8 +458,33 @@ function gceGuideLink(subj, paperNum, variant, session, year, type='qp'){
   const sLetter = {'M/J':'s','O/N':'w','F/M':'m'}[session];
   const yy = String(year).slice(-2);
   const fname = `${subj.code}_${sLetter}${yy}_${type}_${paperNum}${variant}.pdf`;
-  // Replace dead gceguide link with dynamic google search for the pdf file
-  return `https://www.google.com/search?q=${fname}+filetype%3Apdf`;
+
+  const bestExamHelpSlugs = {
+    '0620': 'chemistry-0620',
+    '0610': 'biology-0610',
+    '0625': 'physics-0625',
+    '0654': 'sciences-co-ordinated-0654',
+    '0580': 'mathematics-0580',
+    '0606': 'mathematics-additional-0606',
+    '0607': 'mathematics-international-0607',
+    '0500': 'english-first-language-0500',
+    '0508': 'arabic-first-language-0508',
+    '0475': 'english-literature-0475',
+    '0470': 'history-0470',
+    '0460': 'geography-0460',
+    '0450': 'business-studies-0450',
+    '0455': 'economics-0455',
+    '0452': 'accounting-0452',
+    '0478': 'computer-science-0478'
+  };
+
+  if (bestExamHelpSlugs[subj.code]) {
+    return `https://bestexamhelp.com/exam/cambridge-igcse/${bestExamHelpSlugs[subj.code]}/${year}/${fname}`;
+  }
+
+  // Fallback to PapaCambridge direct PDF link
+  const folderName = getGceFolderName(subj);
+  return `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/Cambridge%20IGCSE/${encodeURIComponent(folderName)}/${year}/${fname}`;
 }
 function papaCambridgeLink(subj){
   if(subj.board !== 'CAIE') return null;
@@ -2565,7 +2590,8 @@ async function groqStream(){
   
   // Build messages, handling image attachments
   const hasImageMsg = recentMsgs.some(m => m.image);
-  const useModel = hasImageMsg ? 'llama-3.2-90b-vision-preview' : p.model;
+  // Groq decommissioned the llama-3.2 vision models; Llama 4 Scout is the multimodal replacement.
+  const useModel = hasImageMsg ? 'meta-llama/llama-4-scout-17b-16e-instruct' : p.model;
 
   const messages = [
     { role: 'system', content: sys },
